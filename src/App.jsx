@@ -33,6 +33,7 @@ import SetupScreen from "./components/SetupScreen";
 import CloseConfirmModal from "./components/CloseConfirmModal";
 import UpdateModal from "./components/UpdateModal";
 import { useGamepadNav } from "./utils/useGamepadNav";
+import { initCloudSync } from "./sync/cloudSync";
 
 // Lazy-loaded pages: each chunk is only downloaded when the user first visits
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -648,6 +649,20 @@ export default function App() {
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
     };
+  }, []);
+
+  // Cloud sync changed the data → reload it from storage; start auto sync once
+  useEffect(() => {
+    const reload = () => {
+      setSaved(storage.get("saved") || {});
+      setSavedOrder(storage.get("savedOrder") || null);
+      setProgress(storage.get("progress") || {});
+      setHistory(storage.get("history") || []);
+      setWatched(storage.get("watched") || {});
+    };
+    window.addEventListener("streambert:sync-applied", reload);
+    initCloudSync();
+    return () => window.removeEventListener("streambert:sync-applied", reload);
   }, []);
 
   // ── Navigation ────────────────────────────────────────────────────────────

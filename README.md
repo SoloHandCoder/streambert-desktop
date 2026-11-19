@@ -1,3 +1,5 @@
+> **This is a personal copy of [truelockmc/streambert](https://github.com/truelockmc/streambert)** with **cloud sync**: history, saved titles, progress and watched episodes sync with the [Streambert Android app](https://github.com/SoloHandCoder/streambert-android) and other computers through a private GitHub Gist (Settings → Cloud Sync). Updates come from this repo's releases. All credit for Streambert goes to the original author.
+
 [![Downloads@latest](https://img.shields.io/github/downloads/truelockmc/streambert/latest/total?style=for-the-badge)](https://codeberg.org/truelockmc/streambert/releases/latest/)
 [![Release Version Badge](https://img.shields.io/github/v/release/truelockmc/streambert?style=for-the-badge)](https://github.com/truelockmc/streambert/releases)
 [![Issues Badge](https://img.shields.io/github/issues/truelockmc/streambert?style=for-the-badge)](https://github.com/truelockmc/streambert/issues)

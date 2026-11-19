@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import CloudSyncSection from "../components/CloudSyncSection";
 import UpdateModal from "../components/UpdateModal";
 import {
   storage,
@@ -2628,6 +2629,12 @@ const SECTION_NAV = [
     ],
   },
   {
+    id: "sync",
+    label: "Cloud Sync",
+    icon: "☁",
+    keywords: ["sync", "cloud", "gist", "github", "phone", "android", "backup", "devices"],
+  },
+  {
     id: "notifications",
     label: "Notifications",
     icon: "🔔",
@@ -3370,6 +3377,7 @@ export default function SettingsPage({
   const secSubtitles = useRef(null);
   const secDownloads = useRef(null);
   const secNotifications = useRef(null);
+  const secSync = useRef(null);
   const secDiscordRpc = useRef(null);
   const secInterface = useRef(null);
   const secLibrary = useRef(null);
@@ -3383,6 +3391,7 @@ export default function SettingsPage({
     subtitles: secSubtitles,
     downloads: secDownloads,
     notifications: secNotifications,
+    sync: secSync,
     discordRpc: secDiscordRpc,
     interface: secInterface,
     library: secLibrary,
@@ -4278,6 +4287,17 @@ export default function SettingsPage({
               </div>
             )}
           </div>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* GROUP: CLOUD SYNC                                                  */}
+        {/* ══════════════════════════════════════════════════════════════════ */}
+        <div ref={secSync} style={{ scrollMarginTop: 80 }}>
+          <SectionGroupHeader
+            title="Cloud Sync"
+            subtitle="Sync history, saved titles and progress with your phone and other computers"
+          />
+          <CloudSyncSection />
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════ */}

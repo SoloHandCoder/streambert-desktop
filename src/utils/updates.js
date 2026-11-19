@@ -3,8 +3,8 @@
 //
 // Supports multiple release sources (GitHub + Codeberg).
 
-export const GITHUB_REPO = "truelockmc/streambert";
-export const CODEBERG_REPO = "truelockmc/streambert";
+// Updates come from this desktop copy's own GitHub releases
+export const GITHUB_REPO = "SoloHandCoder/streambert-desktop";
 
 // ── Source registry ───────────────────────────────────────────────────────────
 // Each entry just describes *where* to fetch from and how to build the
@@ -17,22 +17,19 @@ export const UPDATE_SOURCES = {
     headers: { Accept: "application/vnd.github+json" },
     fallbackUrl: `https://github.com/${GITHUB_REPO}/releases/latest`,
   },
-  codeberg: {
-    id: "codeberg",
-    label: "Codeberg",
-    apiUrl: `https://codeberg.org/api/v1/repos/${CODEBERG_REPO}/releases?limit=10`,
-    headers: { Accept: "application/json" },
-    fallbackUrl: `https://codeberg.org/${CODEBERG_REPO}/releases`,
-  },
 };
 
 export const DEFAULT_UPDATE_SOURCE = "github";
 
 // Normalise "1.3" → "1.3.0" so semver comparison works correctly
 export function normaliseVersion(v) {
-  const parts = String(v).replace(/^v/i, "").split(".");
-  while (parts.length < 3) parts.push("0");
-  return parts.slice(0, 3).map(Number);
+  const parts = String(v)
+    .replace(/^v/i, "")
+    .split(/[-+]/)[0]
+    .split(".")
+    .map((p) => parseInt(p, 10) || 0);
+  while (parts.length < 3) parts.push(0);
+  return parts.slice(0, 3);
 }
 
 // Returns true only when `a` is strictly greater than `b` (semver arrays)
@@ -76,7 +73,7 @@ export async function checkForUpdates(source = DEFAULT_UPDATE_SOURCE) {
     : null;
   if (!data) throw new Error(`No stable release found on ${cfg.label}`);
 
-  const latestRaw = (data.tag_name || "").replace(/^v/i, "");
+  const latestRaw = (data.tag_name || "").replace(/^v/i, "").replace(/-desktop$/i, "");
   const latestParts = normaliseVersion(latestRaw);
   const currentParts = normaliseVersion(currentVersion);
   const url = data.html_url || cfg.fallbackUrl;

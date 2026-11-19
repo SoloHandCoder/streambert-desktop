@@ -193,6 +193,7 @@ export async function downloadSeason(o) {
         posterPath: o.posterPath || null,
         tmdbId: o.tmdbId,
         subtitles: [],
+        quality: (await import("./quality.js")).getDefaultQuality(),
       });
       if (res?.ok) {
         ok++;

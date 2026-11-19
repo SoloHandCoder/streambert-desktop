@@ -1,6 +1,7 @@
 // Settings → Downloads: smart downloads + storage limit (desktop)
 import { useEffect, useState } from "react";
 import { getAutoNext, setAutoNext, getStorageLimitGB, setStorageLimitGB } from "./smartDownloads.js";
+import { QUALITIES, getDefaultQuality, setDefaultQuality } from "./quality.js";
 
 function Chips({ options, value, onPick }) {
   return (
@@ -22,6 +23,7 @@ function Chips({ options, value, onPick }) {
 export default function SmartDownloadSettings() {
   const [next, setNext] = useState(getAutoNext);
   const [limit, setLimit] = useState(getStorageLimitGB);
+  const [quality, setQ] = useState(getDefaultQuality);
   const [used, setUsed] = useState(null);
   useEffect(() => {
     window.electron
@@ -43,6 +45,18 @@ export default function SmartDownloadSettings() {
         onPick={(v) => {
           setAutoNext(v);
           setNext(v);
+        }}
+      />
+      <div className="settings-section-title" style={{ marginTop: 26 }}>Download quality</div>
+      <div style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.6 }}>
+        The quality new downloads use (you can still pick another one per download). Lower quality saves space.
+      </div>
+      <Chips
+        options={QUALITIES}
+        value={quality}
+        onPick={(v) => {
+          setDefaultQuality(v);
+          setQ(v);
         }}
       />
       <div className="settings-section-title" style={{ marginTop: 26 }}>Storage limit</div>

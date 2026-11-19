@@ -189,6 +189,82 @@ function downloadSubtitleFile(url, destPath) {
   });
 }
 
+// ── Download quality: pick a variant of a master playlist ─────────────────────
+// Fetches the playlist with the headers the in-app player used and returns the
+// best variant at or below maxHeight (or the smallest one, if none fits).
+function fetchText(url, headers, redirects = 5) {
+  return new Promise((resolve, reject) => {
+    let u;
+    try {
+      u = new URL(url);
+    } catch (e) {
+      return reject(e);
+    }
+    const lib = u.protocol === "https:" ? https : http;
+    const req = lib.get(u, { headers: { "User-Agent": "Mozilla/5.0", ...headers } }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && redirects > 0) {
+        res.resume();
+        return resolve(fetchText(new URL(res.headers.location, u).toString(), headers, redirects - 1));
+      }
+      if (res.statusCode >= 400) {
+        res.resume();
+        return reject(new Error(`HTTP ${res.statusCode}`));
+      }
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (c) => {
+        body += c;
+        if (body.length > 2e6) req.destroy();
+      });
+      res.on("end", () => resolve({ text: body, url: u.toString() }));
+    });
+    req.on("error", reject);
+    req.setTimeout(15000, () => req.destroy(new Error("timeout")));
+  });
+}
+
+async function pickVariant(url, maxHeight) {
+  if (!maxHeight || !/^https?:/i.test(url)) return url;
+  let meta = null;
+  try {
+    meta = require("./player").getStreamMeta(url);
+  } catch {}
+  const headers = {};
+  if (meta?.referer) headers.Referer = meta.referer;
+  if (meta?.origin) headers.Origin = meta.origin;
+  if (meta?.userAgent) headers["User-Agent"] = meta.userAgent;
+  let pl;
+  try {
+    pl = await fetchText(url, headers);
+  } catch {
+    return url;
+  }
+  if (!pl.text.includes("#EXT-X-STREAM-INF")) return url;
+  const lines = pl.text.split(/\r?\n/);
+  let best = null, bestScore = -1, low = null, lowH = Infinity;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (!l.startsWith("#EXT-X-STREAM-INF")) continue;
+    let j = i + 1;
+    while (j < lines.length && (!lines[j].trim() || lines[j].trim().startsWith("#"))) j++;
+    if (j >= lines.length) continue;
+    const uri = new URL(lines[j].trim(), pl.url).toString();
+    const h = Number((/RESOLUTION=\d+x(\d+)/i.exec(l) || [])[1] || 0);
+    const bw = Number((/BANDWIDTH=(\d+)/i.exec(l) || [])[1] || 0);
+    if (h && h < lowH) {
+      lowH = h;
+      low = uri;
+    }
+    const fits = !h || h <= maxHeight + 40;
+    const score = h * 1e9 + bw;
+    if (fits && score > bestScore) {
+      bestScore = score;
+      best = uri;
+    }
+  }
+  return best || low || url;
+}
+
 // ── IPC registration ──────────────────────────────────────────────────────────
 
 function register(getMainWindow) {
@@ -233,7 +309,7 @@ function register(getMainWindow) {
   // ── start download ────────────────────────────────────────────────────────
   ipcMain.handle(
     "run-download",
-    (
+    async (
       _,
       {
         token,
@@ -247,9 +323,12 @@ function register(getMainWindow) {
         posterPath,
         tmdbId,
         subtitles,
+        quality,
       },
     ) => {
       try {
+        // chosen quality: download that variant of the master playlist
+        if (Number(quality) > 0) m3u8Url = await pickVariant(m3u8Url, Number(quality));
         // Resolve the binary path from trusted registry.
         const binaryPath = trustedBinaryPaths.get(token);
         if (!binaryPath) {

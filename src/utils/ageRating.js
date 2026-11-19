@@ -164,6 +164,12 @@ export async function fetchTVRating(tvId, apiKey, countryCode) {
 }
 
 export function getAgeLimitSetting(storage) {
+  // a kids profile has its own age limit
+  try {
+    const m = JSON.parse(localStorage.getItem("__sb_profiles") || "null");
+    const p = m?.list?.find((x) => x.id === m.current);
+    if (p?.kids) return Number(p.ageLimit ?? 12);
+  } catch {}
   const val = storage.get("ageLimit");
   if (val === null || val === undefined || val === "") return null;
   return Number(val);

@@ -1,3 +1,4 @@
+import { askParentPin, guardKids } from "./kids.js";
 // Profiles (shared with the Android app): separate history, saved list, progress and watched episodes per person.
 // Settings (theme, sources, TMDB token, downloads) are shared by all profiles.
 // The active profile's data lives in the normal storage keys; switching saves
@@ -93,7 +94,7 @@ export function switchProfile(id, { reload = true } = {}) {
   return true;
 }
 
-export function createProfile(name, color) {
+export function createProfile(name, color, extra = {}) {
   const m = getMeta();
   if (!localStorage.getItem(META)) setMeta(m); // persist the implicit default first
   const id = "p" + Date.now().toString(36);
@@ -102,6 +103,7 @@ export function createProfile(name, color) {
     name: String(name || "Profile").slice(0, 24),
     color: color || COLORS[m.list.length % COLORS.length],
     editedAt: Date.now(),
+    ...(extra.kids ? { kids: true, ageLimit: Number(extra.ageLimit ?? 12) } : {}),
   });
   localStorage.setItem(DATA(id), "{}");
   setMeta(m);
@@ -114,6 +116,15 @@ export function updateProfile(id, patch) {
   if (!p) return;
   if (patch.name != null) p.name = String(patch.name).slice(0, 24) || p.name;
   if (patch.color) p.color = patch.color;
+  if (patch.kids !== undefined) {
+    if (patch.kids) {
+      p.kids = true;
+      p.ageLimit = Number(patch.ageLimit ?? p.ageLimit ?? 12);
+    } else {
+      delete p.kids;
+      delete p.ageLimit;
+    }
+  }
   p.editedAt = Date.now();
   setMeta(m);
 }
@@ -206,9 +217,12 @@ export function showPicker({ onManage } = {}) {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "sb-profiles__item" + (p.id === m.current ? " sb-profiles__item--current" : "");
-      b.innerHTML = avatarHtml(p) + `<span class="sb-profiles__name"></span>`;
+      b.innerHTML = avatarHtml(p) + `<span class="sb-profiles__name"></span>` + (p.kids ? `<span class="sb-kids-badge">KIDS</span>` : "");
       b.querySelector(".sb-profiles__name").textContent = p.name;
-      b.onclick = () => {
+      b.onclick = async () => {
+        // leaving a kids profile needs the parent PIN
+        const cur = m.list.find((x) => x.id === m.current);
+        if (cur?.kids && p.id !== cur.id && !(await askParentPin("Leaving a kids profile needs the parent PIN."))) return;
         el.classList.add("sb-profiles--out");
         setTimeout(() => el.remove(), 220);
         switchProfile(p.id);
@@ -216,7 +230,8 @@ export function showPicker({ onManage } = {}) {
       };
       grid.appendChild(b);
     });
-    el.querySelector(".sb-profiles__manage").onclick = () => {
+    el.querySelector(".sb-profiles__manage").onclick = async () => {
+      if (!(await guardKids("Managing profiles needs the parent PIN."))) return;
       el.remove();
       onManage?.();
       resolve(null);

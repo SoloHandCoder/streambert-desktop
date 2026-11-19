@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { QUALITIES, getDefaultQuality } from "../extras/quality.js";
 import { CloseIcon, DownloadIcon, SettingsIcon, SubtitlesIcon } from "./Icons";
 import {
   storage,
@@ -540,6 +541,7 @@ export default function DownloadModal({
     }
   };
 
+  const [quality, setQuality] = useState(getDefaultQuality);
   const handleDownload = async () => {
     if (!downloader?.token || !downloadPath || !m3u8Url) return;
     setDownloadStatus("starting");
@@ -588,6 +590,7 @@ export default function DownloadModal({
       episode,
       posterPath: posterPath || null,
       tmdbId: tmdbId || mediaId || null,
+      quality,
     });
 
     if (result.ok) {
@@ -1224,6 +1227,23 @@ export default function DownloadModal({
                       Change
                     </button>
                   </div>
+
+                  {downloadStatus !== "ok" && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                      <span style={{ fontSize: 12, color: "var(--text3)", marginRight: 2 }}>Quality</span>
+                      {QUALITIES.map(([v, label]) => (
+                        <button
+                          key={v}
+                          type="button"
+                          className={"btn btn--sm " + (quality === v ? "btn-primary" : "btn-ghost")}
+                          style={{ padding: "4px 12px", fontSize: 12 }}
+                          onClick={() => setQuality(v)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {downloadStatus !== "ok" && (
                     <button

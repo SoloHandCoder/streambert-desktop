@@ -1,3 +1,4 @@
+import KidsGate from "./extras/KidsGate";
 import DiscoverPage from "./extras/DiscoverPage";
 import PersonPage from "./extras/PersonPage";
 import {
@@ -1209,11 +1210,13 @@ export default function App() {
               />
             )}
             {page === "settings" && (
+              <KidsGate onDenied={() => setPage("home")}>
               <SettingsPage
                 apiKey={apiKey}
                 onChangeApiKey={changeApiKey}
                 initialSection={selected?.section}
               />
+              </KidsGate>
             )}
             {page === "downloads" && (
               <DownloadsPage

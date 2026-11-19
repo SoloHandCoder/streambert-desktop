@@ -172,7 +172,7 @@ async function doSync() {
   }
   const meta = getMeta();
   const localIndex = {
-    profiles: meta.list.map(({ id, name, color, editedAt }) => ({ id, name, color, editedAt })),
+    profiles: meta.list.map(({ id, name, color, editedAt, kids, ageLimit }) => ({ id, name, color, editedAt, ...(kids ? { kids: true, ageLimit } : {}) })),
     deleted: meta.deleted || [],
   };
   const remoteIndex = remote[INDEX] || { profiles: [], deleted: [] };

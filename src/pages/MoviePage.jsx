@@ -75,6 +75,7 @@ import {
 import { useSourceId } from "../utils/useSourceId";
 import { setPlayerGamepadActive } from "../utils/gamepadPlayerState";
 import HiAnimeLoader from "../components/HiAnimeLoader";
+import { PartyButton } from "../extras/PartyUI";
 import { RateButton, ListsButton } from "../extras/LibraryUI";
 import { usePlayerExtras, SubtitleButton } from "../extras/playerExtras";
 import { CastButton } from "../extras/CastUI";
@@ -981,6 +982,7 @@ export default function MoviePage({
               </button>
               <ListsButton item={{ ...item, media_type: "movie" }} />
               <RateButton item={{ ...item, media_type: "movie" }} />
+              <PartyButton />
               {!isUnreleased &&
                 (isWatched ? (
                   <button

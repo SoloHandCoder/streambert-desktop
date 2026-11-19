@@ -84,6 +84,7 @@ import {
 import { useSourceId } from "../utils/useSourceId";
 import { setPlayerGamepadActive } from "../utils/gamepadPlayerState";
 import HiAnimeLoader from "../components/HiAnimeLoader";
+import { PartyButton } from "../extras/PartyUI";
 import { RateButton, ListsButton } from "../extras/LibraryUI";
 import { usePlayerExtras, SubtitleButton } from "../extras/playerExtras";
 import { downloadSeason } from "../extras/seasonDownload";
@@ -1912,6 +1913,7 @@ export default function TVPage({
                   </button>
                   <ListsButton item={{ ...item, media_type: "tv" }} />
                   <RateButton item={{ ...item, media_type: "tv" }} />
+                  <PartyButton />
                   <button className="btn btn-ghost" onClick={onBack}>
                     <BackIcon /> Back
                   </button>

@@ -1,0 +1,120 @@
+.sbpt-active { border-color: var(--red) !important; color: var(--red) !important; }
+.sbpt-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2147483500;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(620px, calc(100vh - 60px));
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  animation: sbDialogIn 0.28s var(--sb-ease-out, ease) backwards;
+}
+.sbpt-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.sbpt-title { flex: 1; font-weight: 700; font-size: 15px; }
+.sbpt-x { width: 30px; height: 30px; }
+.sbpt-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.sbpt-live { flex: 1; min-height: 0; }
+.sbpt-label { font-size: 12px; color: var(--text3); font-weight: 600; }
+.sbpt-wide { width: 100%; justify-content: center; margin-top: 4px; }
+.sbpt-or { text-align: center; font-size: 12px; color: var(--text3); margin: 6px 0 2px; }
+.sbpt-err { color: var(--red); font-size: 13px; }
+.sbpt-code-row { display: flex; align-items: center; gap: 8px; }
+.sbpt-code-row > div { flex: 1; }
+.sbpt-code { font: 800 22px monospace; letter-spacing: 3px; }
+.sbpt-members { display: flex; gap: 6px; flex-wrap: wrap; }
+.sbpt-member { padding: 3px 10px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); font-size: 12px; font-weight: 600; }
+.sbpt-member.me { border-color: var(--red); }
+.sbpt-elsewhere {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--red-dim);
+  font-size: 13px;
+}
+.sbpt-elsewhere .btn { margin-left: auto; }
+.sbpt-chat {
+  flex: 1;
+  min-height: 120px;
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 2px;
+}
+.sbpt-sys { font-size: 12px; color: var(--text3); text-align: center; }
+.sbpt-msg {
+  align-self: flex-start;
+  max-width: 85%;
+  padding: 7px 11px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--surface2);
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+.sbpt-msg.me { align-self: flex-end; background: var(--red); color: #fff; border-radius: 14px 14px 4px 14px; }
+.sbpt-who { display: block; font-size: 11px; font-weight: 700; color: var(--text3); margin-bottom: 2px; }
+.sbpt-emoji { display: flex; justify-content: space-between; }
+.sbpt-emoji button {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 10px;
+  transition: transform 0.15s;
+}
+.sbpt-emoji button:active { transform: scale(1.3); }
+.sbpt-send { display: flex; gap: 8px; }
+.sbpt-pill {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2147483500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 22px;
+  border: 1px solid var(--red);
+  background: var(--surface);
+  color: var(--text);
+  font: 700 14px var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+.sbpt-dot { width: 8px; height: 8px; border-radius: 50%; background: #f2c94c; }
+.sbpt-reactions { position: fixed; inset: 0; pointer-events: none; z-index: 2147483600; overflow: hidden; }
+.sbpt-react {
+  position: absolute;
+  bottom: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: sbptFloat 2.6s ease-out forwards;
+}
+.sbpt-react-emoji { font-size: 44px; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)); }
+.sbpt-react-name { font: 700 11px var(--font-body); color: #fff; text-shadow: 0 1px 3px #000; }
+@keyframes sbptFloat {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  15% { transform: translateY(-40px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(-360px) scale(1); opacity: 0; }
+}
+html[data-mobile] .sbpt-panel {
+  left: 8px;
+  right: 8px;
+  width: auto;
+  bottom: calc(var(--m-nav-h, 64px) + var(--m-safe-b, 0px) + 8px);
+}
+html[data-mobile] .sbpt-pill { bottom: calc(var(--m-nav-h, 64px) + var(--m-safe-b, 0px) + 12px); right: 12px; }
+html[data-mobile][data-player-fullscreen] .sbpt-panel,
+html[data-mobile][data-player-fullscreen] .sbpt-pill { bottom: 16px; }

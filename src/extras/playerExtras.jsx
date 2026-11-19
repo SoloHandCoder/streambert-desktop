@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { trackWatchSecond } from "./libraryExtras.js";
 import { traktScrobble } from "./trakt.js";
+import { reportPlayer, setPartyPlayer } from "./party.js";
 
 export const STYLE_KEY = "streambert_subtitleStyle"; // same key as the Android player
 const OFFSET_PREFIX = "streambert_subOffset_";
@@ -80,11 +81,11 @@ function tickJs(st, offset, meta) {
     } else if (el) el.remove();
     const vids = document.querySelectorAll("video");
     if (!vids.length) return null;
-    let playing = false, pos = 0, len = 0;
+    let playing = false, curT = 0, len = 0;
     for (const v of vids) {
       // short clips (ads, previews) don't count as watching
       if (!v.paused && !v.ended && v.readyState > 2 && v.duration > 120) playing = true;
-      if (v.duration > 120) { pos = v.currentTime; len = v.duration; }
+      if (v.duration > 120) { curT = v.currentTime; len = v.duration; }
       for (const t of Array.from(v.textTracks || [])) {
         const cues = t.cues;
         if (!cues) continue;
@@ -111,7 +112,8 @@ function tickJs(st, offset, meta) {
         } catch (e) {}
       }
     }
-    return { playing, t: pos, d: len };
+    // frames with only short clips (ads, previews) are not the player
+    return len ? { playing, t: curT, d: len } : null;
   })()`;
 }
 
@@ -155,8 +157,29 @@ export function usePlayerExtras({ webviewRef, active, info, offsetKey }) {
       if (stopped) return;
       if (r?.playing && infoRef.current?.id && elapsed > 0) trackWatchSecond(infoRef.current, elapsed);
       if (r && r.d > 0 && infoRef.current?.id) traktScrobble(infoRef.current, (r.t / r.d) * 100, !!r.playing);
+      const inf2 = infoRef.current;
+      reportPlayer(
+        inf2?.id ? { id: inf2.id, media_type: inf2.media_type, title: inf2.title, season: inf2.season, episode: inf2.episode } : null,
+        r && r.d > 0 ? { playing: !!r.playing, t: r.t } : null,
+      );
     };
-    const t = setInterval(tick, TICK_MS);
+    // watch party: follow what the others do
+    setPartyPlayer(({ playing, t }) => {
+      const wv = webviewRef.current;
+      let id = null;
+      try {
+        id = wv.getWebContentsId();
+      } catch {
+        return;
+      }
+      window.electron.playerTick(
+        id,
+        `(() => { const v = [...document.querySelectorAll("video")].find((x) => x.duration > 120); if (!v) return null;
+          if (Math.abs(v.currentTime - ${Number(t) || 0}) > 2) v.currentTime = ${Number(t) || 0};
+          ${playing ? "v.play().catch(() => {});" : "v.pause();"} return null; })()`,
+      );
+    });
+    const t = setInterval(tick, 1000);
     const onChange = () => tick();
     window.addEventListener(EVT, onChange);
     return () => {

@@ -1,3 +1,4 @@
+import { PartyDock, PartyReactions } from "./extras/PartyUI";
 import { traktMarkWatched } from "./extras/trakt.js";
 import KidsGate from "./extras/KidsGate";
 import DiscoverPage from "./extras/DiscoverPage";
@@ -1318,6 +1319,8 @@ export default function App() {
           />
         )}
         {toast && <div className="toast">{toast}</div>}
+        <PartyDock />
+        <PartyReactions />
         <CastBar />
 
         {/* ── Episode check status pill / result card ── */}

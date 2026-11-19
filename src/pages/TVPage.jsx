@@ -84,6 +84,8 @@ import {
 import { useSourceId } from "../utils/useSourceId";
 import { setPlayerGamepadActive } from "../utils/gamepadPlayerState";
 import HiAnimeLoader from "../components/HiAnimeLoader";
+import { RateButton, ListsButton } from "../extras/LibraryUI";
+import { usePlayerExtras, SubtitleButton } from "../extras/playerExtras";
 
 // ── Partial-circle progress icon (cached per pct tier) ───────────────────────
 // Uses a single SVG arc. Three instances (25/50/75)
@@ -501,6 +503,19 @@ export default function TVPage({
   const sourceRef = useRef(null);
   const playerWrapRef = useRef(null);
   const webviewRef = useRef(null);
+  const subOffsetKey = `tv_${item.id}_s${selectedSeason}e${selectedEp?.episode_number ?? 0}`;
+  usePlayerExtras({
+    webviewRef,
+    active: playing,
+    info: {
+      id: item.id,
+      media_type: "tv",
+      title: item.name || item.title || "",
+      poster_path: item.poster_path || null,
+      genres: (item.genres || []).map((g) => g?.name).filter(Boolean),
+    },
+    offsetKey: subOffsetKey,
+  });
   // Always-current refs for interval callbacks, avoids stale closures without restarting the interval
   const saveProgressRef = useRef(saveProgress);
   saveProgressRef.current = saveProgress;
@@ -1863,6 +1878,8 @@ export default function TVPage({
                     {isSaved ? <BookmarkFillIcon /> : <BookmarkIcon />}
                     {isSaved ? "Saved" : "Save"}
                   </button>
+                  <ListsButton item={{ ...item, media_type: "tv" }} />
+                  <RateButton item={{ ...item, media_type: "tv" }} />
                   <button className="btn btn-ghost" onClick={onBack}>
                     <BackIcon /> Back
                   </button>
@@ -2329,6 +2346,7 @@ export default function TVPage({
                   >
                     <PopOutIcon />
                   </button>
+                  <SubtitleButton offsetKey={subOffsetKey} />
                 </div>
                 {showSourceMenu && menuPos && (
                   <div

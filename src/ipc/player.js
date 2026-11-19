@@ -853,6 +853,32 @@ function register(getMainWindow, { writeSecretMigration }) {
     (_, { url }) => new Promise((resolve) => fetchImageSecure(url, resolve)),
   );
 
+  // ── Subtitle style/timing + "is something playing" across all player frames ─
+  // Only for <webview> guests (the in-app players), never the app window itself.
+  ipcMain.handle("player-tick", async (_, webContentsId, js) => {
+    try {
+      const { webContents } = require("electron");
+      const wc = webContents.fromId(webContentsId);
+      if (!wc || wc.isDestroyed() || wc.getType() !== "webview" || typeof js !== "string") return null;
+      const frames = [];
+      const collect = (f) => {
+        frames.push(f);
+        for (const c of f.frames || []) collect(c);
+      };
+      collect(wc.mainFrame);
+      let out = null;
+      for (const f of frames) {
+        try {
+          const r = await f.executeJavaScript(js);
+          if (r && (r.playing || !out)) out = r;
+        } catch {}
+      }
+      return out;
+    } catch {
+      return null;
+    }
+  });
+
   // ── Query video progress across all webview frames ────────────────────────
   // executeJavaScript on a webview only reaches the top frame.
   // VidSrc / 2embed nest the player inside cross-origin iframes, iterate

@@ -34,6 +34,8 @@ import CloseConfirmModal from "./components/CloseConfirmModal";
 import UpdateModal from "./components/UpdateModal";
 import { useGamepadNav } from "./utils/useGamepadNav";
 import { initCloudSync } from "./sync/cloudSync";
+import { getMyRating, useLibraryExtras, K_RATINGS } from "./extras/libraryExtras.js";
+import { initProfiles } from "./extras/profiles.js";
 
 // Lazy-loaded pages: each chunk is only downloaded when the user first visits
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -57,6 +59,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [dlSearchOpen, setDlSearchOpen] = useState(false);
+  const { version: myRatingsVersion } = useLibraryExtras([K_RATINGS]);
   const [librarySort, setLibrarySort] = useState(
     () => storage.get(STORAGE_KEYS.LIBRARY_SORT) || "manual",
   );
@@ -662,6 +665,7 @@ export default function App() {
     };
     window.addEventListener("streambert:sync-applied", reload);
     initCloudSync();
+    initProfiles();
     return () => window.removeEventListener("streambert:sync-applied", reload);
   }, []);
 
@@ -983,8 +987,10 @@ export default function App() {
       return [...list].sort((a, b) =>
         (b.year || "").localeCompare(a.year || ""),
       );
+    if (librarySort === "myrating")
+      return [...list].sort((a, b) => getMyRating(b) - getMyRating(a));
     return list;
-  }, [saved, savedOrder, librarySort]);
+  }, [saved, savedOrder, librarySort, myRatingsVersion]);
 
   const handleReorderSaved = useCallback((newOrder) => {
     setSavedOrder(newOrder);
@@ -1141,6 +1147,7 @@ export default function App() {
                 onMarkWatched={markWatched}
                 onMarkUnwatched={markUnwatched}
                 onRemoveHistory={removeHistory}
+                apiKey={apiKey}
               />
             )}
             {page === "settings" && (

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import CloudSyncSection from "../components/CloudSyncSection";
+import ProfilesSection from "../extras/ProfilesSection";
+import { SubtitleStylePicker } from "../extras/playerExtras";
 import UpdateModal from "../components/UpdateModal";
 import {
   storage,
@@ -1718,6 +1720,7 @@ function LibraryPrivacySection() {
     { value: "title", label: "Title A-Z" },
     { value: "rating", label: "Top rated" },
     { value: "year", label: "Newest first" },
+    { value: "myrating", label: "My rating" },
   ];
 
   return (
@@ -2612,6 +2615,10 @@ const SECTION_NAV = [
       "srt",
       "download",
       "cc",
+      "style",
+      "size",
+      "color",
+      "timing",
     ],
   },
   {
@@ -2630,9 +2637,9 @@ const SECTION_NAV = [
   },
   {
     id: "sync",
-    label: "Cloud Sync",
+    label: "Profiles & Sync",
     icon: "☁",
-    keywords: ["sync", "cloud", "gist", "github", "phone", "android", "backup", "devices"],
+    keywords: ["sync", "cloud", "gist", "github", "phone", "android", "backup", "devices", "profile", "profiles", "family", "who"],
   },
   {
     id: "notifications",
@@ -4224,8 +4231,16 @@ export default function SettingsPage({
         <div ref={secSubtitles} style={{ scrollMarginTop: 80 }}>
           <SectionGroupHeader
             title="Subtitles"
-            subtitle="Subtitle download source, preferred language, and API key"
+            subtitle="Subtitle look, download source, preferred language, and API key"
           />
+          <div style={{ marginBottom: 40, maxWidth: 620 }}>
+            <div className="settings-section-title">Subtitle style</div>
+            <div style={{ fontSize: 13, color: "var(--text3)", marginBottom: 12, lineHeight: 1.6 }}>
+              Used by the in-app players (and the Android app, when synced). Out-of-sync subtitles can be shifted
+              with the CC button on the player.
+            </div>
+            <SubtitleStylePicker />
+          </div>
           <SubtitleSettingsSection />
         </div>
 
@@ -4294,9 +4309,10 @@ export default function SettingsPage({
         {/* ══════════════════════════════════════════════════════════════════ */}
         <div ref={secSync} style={{ scrollMarginTop: 80 }}>
           <SectionGroupHeader
-            title="Cloud Sync"
-            subtitle="Sync history, saved titles and progress with your phone and other computers"
+            title="Profiles & Sync"
+            subtitle="Profiles for everyone at home, synced with your phone and other computers"
           />
+          <ProfilesSection />
           <CloudSyncSection />
         </div>
 

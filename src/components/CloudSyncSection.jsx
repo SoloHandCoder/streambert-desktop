@@ -80,7 +80,7 @@ export default function CloudSyncSection() {
     <div style={{ marginBottom: 40 }}>
       <div className="settings-section-title">GitHub Gist sync</div>
       <div style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16, lineHeight: 1.6, maxWidth: 680 }}>
-        Keeps your history, saved titles, progress and watched episodes in sync with the Streambert Android app and
+        Keeps every profile's history, saved titles, progress, watched episodes, ratings, lists and watch stats in sync with the Streambert Android app and
         your other computers. Everything is stored in a private (secret) Gist on your own GitHub account; your token
         is stored encrypted on this computer.
       </div>

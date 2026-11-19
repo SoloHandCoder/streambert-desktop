@@ -4,16 +4,38 @@ import { storage } from "../utils/storage";
 
 export const DEFAULT_INVIDIOUS_BASE = "https://inv.nadeko.net";
 
+// Used when the live list below can't be loaded
 const FALLBACK_INSTANCES = [
-  "https://invidious.privacyredirect.com",
-  "https://inv.tux.pizza",
-  "https://yt.cdaut.de",
-  "https://invidious.lunar.icu",
-  "https://invidious.protokolla.fi",
   "https://invidious.nerdvpn.de",
-  "https://iv.melmac.space",
-  "https://invidious.perennialte.ch",
+  "https://yt.chocolatemoo53.com",
+  "https://invidious.tiekoetter.com",
+  "https://invidious.protokolla.fi",
 ];
+
+// Last resort when no Invidious server works: YouTube's privacy-enhanced player
+const YOUTUBE_NOCOOKIE = (key) =>
+  `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&rel=0&playsinline=1&modestbranding=1`;
+
+// Live list of healthy Invidious servers (cached for 6 h)
+let _liveCache = null;
+async function liveInstances() {
+  if (_liveCache && Date.now() - _liveCache.at < 6 * 3600 * 1000) return _liveCache.list;
+  try {
+    const res = await fetch("https://api.invidious.io/instances.json?sort_by=health", {
+      signal: AbortSignal.timeout(4000),
+    });
+    const data = await res.json();
+    const list = data
+      .filter(([, i]) => i?.type === "https" && (i.monitor?.uptime ?? 0) >= 90 && i.uri)
+      .slice(0, 5)
+      .map(([, i]) => i.uri.replace(/\/$/, ""));
+    if (list.length) {
+      _liveCache = { at: Date.now(), list };
+      return list;
+    }
+  } catch {}
+  return FALLBACK_INSTANCES;
+}
 
 export function getInvidiousBase() {
   return (storage.get("invidiousBase") || DEFAULT_INVIDIOUS_BASE).replace(
@@ -28,7 +50,10 @@ const DETECT_BOT_JS = `
   var body  = (document.body  && document.body.innerText || '').toLowerCase()
   var botKeywords = ['verifying', 'antibot', 'challenge', 'ddos', 'please wait', 'checking your browser', 'just a moment']
   var isBot = botKeywords.some(function(k) { return title.includes(k) || body.includes(k) })
-  isBot
+  // dead server → browser error page ("Webpage not available") or no player at all
+  var isError = location.protocol === 'chrome-error:' || title.includes('not available') ||
+    body.includes('err_') || body.includes('502 bad gateway') || body.includes('503 service')
+  return { isBot: isBot || isError, hasVideo: !!document.querySelector('video') }
 })()
 `;
 
@@ -66,22 +91,27 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
   const [failed, setFailed] = useState(false);
   const instanceIndexRef = useRef(-1);
 
-  const tryNextInstance = useCallback(() => {
-    const preferred = getInvidiousBase();
-    const list = [
-      preferred,
-      ...FALLBACK_INSTANCES.filter((i) => i !== preferred),
-    ];
+  const listRef = useRef(null);
+  const tryNextInstance = useCallback(async () => {
+    if (!listRef.current) {
+      const preferred = getInvidiousBase();
+      const live = await liveInstances();
+      listRef.current = [preferred, ...live.filter((i) => i !== preferred), "youtube"];
+    }
+    const list = listRef.current;
     instanceIndexRef.current += 1;
     const idx = instanceIndexRef.current;
     if (idx >= list.length) {
       setFailed(true);
-      setStatusMsg(
-        "All Invidious instances failed. Try setting a custom instance in Settings.",
-      );
+      setStatusMsg("Couldn't load the trailer. Try “Open in Browser”.");
       return;
     }
     const instance = list[idx];
+    if (instance === "youtube") {
+      setStatusMsg(idx === 0 ? "Loading trailer…" : "Trying YouTube…");
+      setCurrentSrc(YOUTUBE_NOCOOKIE(trailerKey));
+      return;
+    }
     const label = instance.replace(/^https?:\/\//, "");
     setStatusMsg(idx === 0 ? "Loading trailer…" : `Trying ${label}…`);
     setCurrentSrc(`${instance}/embed/${trailerKey}?autoplay=1&listen=0`);
@@ -89,6 +119,7 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
 
   useEffect(() => {
     instanceIndexRef.current = -1;
+    listRef.current = null;
     tryNextInstance();
   }, [tryNextInstance]);
 
@@ -111,20 +142,50 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
     const wv = webviewRef.current;
     if (!wv || !currentSrc) return;
 
-    const onLoad = () => {
-      wv.executeJavaScript(DETECT_BOT_JS)
-        .then((isBot) => {
-          if (isBot) {
-            tryNextInstance();
-          } else {
-            wv.executeJavaScript(SETUP_JS).catch(() => {});
-            setStatusMsg(null);
-          }
-        })
-        .catch(() => tryNextInstance());
+    const isYouTube = currentSrc.includes("youtube-nocookie.com");
+    let settled = false;
+    // a server that never finishes loading → try the next one
+    const timeout = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        tryNextInstance();
+      }
+    }, isYouTube ? 15000 : 9000);
+    const onLoad = async () => {
+      if (settled) return;
+      if (isYouTube) {
+        settled = true;
+        clearTimeout(timeout);
+        setStatusMsg(null);
+        return;
+      }
+      // the player may appear a moment after load
+      for (let i = 0; i < 4 && !settled; i++) {
+        let r = null;
+        try {
+          r = await wv.executeJavaScript(DETECT_BOT_JS);
+        } catch {}
+        if (r && r.isBot) break;
+        if (r && r.hasVideo) {
+          settled = true;
+          clearTimeout(timeout);
+          wv.executeJavaScript(SETUP_JS).catch(() => {});
+          setStatusMsg(null);
+          return;
+        }
+        await new Promise((res) => setTimeout(res, 1200));
+      }
+      if (!settled) {
+        settled = true;
+        clearTimeout(timeout);
+        tryNextInstance();
+      }
     };
 
     const onFailLoad = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
       tryNextInstance();
     };
 
@@ -151,6 +212,8 @@ export default function TrailerModal({ trailerKey, title, onClose }) {
     wv.addEventListener("did-fail-load", onFailLoad);
     wv.addEventListener("will-navigate", onWillNavigate);
     return () => {
+      settled = true;
+      clearTimeout(timeout);
       clearInterval(endedPoll);
       wv.removeEventListener("did-finish-load", onLoad);
       wv.removeEventListener("did-fail-load", onFailLoad);

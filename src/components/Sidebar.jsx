@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { imgUrl } from "../utils/api";
 import { useSeasonalEvent } from "../components/seasonalEvents.jsx";
+import { getMeta, showPicker } from "../extras/profiles.js";
 import {
   StreambertLogo,
   HomeIcon,
@@ -217,6 +218,7 @@ export default function Sidebar({
       )}
 
       <div className="sidebar-bottom">
+        <ProfileBtn onManage={() => onNavigate("settings")} />
         <SideBtn
           onClick={onShowShortcuts}
           icon={<HelpIcon />}
@@ -272,6 +274,24 @@ function SideBtn({ active, onClick, icon, label, badge }) {
           {badge}
         </span>
       )}
+    </button>
+  );
+}
+
+// current profile; click → "Who's watching?" (only shown with 2+ profiles)
+function ProfileBtn({ onManage }) {
+  const m = getMeta();
+  if (m.list.length < 2) return null;
+  const p = m.list.find((x) => x.id === m.current) || m.list[0];
+  return (
+    <button className="sidebar-btn" onClick={() => showPicker({ onManage })} title={`Profile: ${p.name}`}>
+      <span
+        className="sb-avatar"
+        style={{ width: 28, height: 28, background: p.color, fontSize: 13 }}
+      >
+        {(p.name || "?").trim().charAt(0).toUpperCase()}
+      </span>
+      <span className="tooltip">{`Profile: ${p.name} (switch)`}</span>
     </button>
   );
 }

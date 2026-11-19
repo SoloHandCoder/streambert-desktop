@@ -13,7 +13,7 @@
 //    whichever side changed wins; if both changed, this device wins (it is the
 //    most recent change at the moment it syncs).
 
-export const MAP_KEYS = new Set(["saved", "progress", "watched", "episodeReleaseCache", "sourceFailoverCache"]);
+export const MAP_KEYS = new Set(["saved", "progress", "watched", "episodeReleaseCache", "sourceFailoverCache", "myRatings"]);
 export const HISTORY_LIMIT = 100;
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -59,12 +59,40 @@ export function mergeHistory(b, l, r) {
   return out.slice(0, HISTORY_LIMIT);
 }
 
+// custom lists: per list, the name merges as one value and the items per title
+export function mergeLists(b, l, r) {
+  b = isObj(b) ? b : {};
+  l = isObj(l) ? l : {};
+  r = isObj(r) ? r : {};
+  const out = {};
+  for (const id of new Set([...Object.keys(b), ...Object.keys(l), ...Object.keys(r)])) {
+    const bl = b[id], ll = l[id], rl = r[id];
+    if (!ll || !rl) {
+      const v = pick3(bl, ll, rl); // created or deleted on one side
+      if (v) out[id] = v;
+      continue;
+    }
+    const { items: bi, ...bm } = bl || {};
+    const { items: li, ...lm } = ll;
+    const { items: ri, ...rm } = rl;
+    out[id] = { ...pick3(bl ? bm : undefined, lm, rm), items: mergeMap(bi, li, ri) };
+  }
+  return out;
+}
+
+// watch statistics are kept per device, so each device's entry merges as a value
+export function mergeStats(b, l, r) {
+  return { devices: mergeMap(b?.devices, l?.devices, r?.devices) };
+}
+
 /** merges one profile's data maps (key → parsed value). Returns the merged map. */
 export function mergeProfile(base = {}, local = {}, remote = {}) {
   const out = {};
   for (const k of new Set([...Object.keys(base), ...Object.keys(local), ...Object.keys(remote)])) {
     let v;
     if (k === "history") v = mergeHistory(base[k], local[k], remote[k]);
+    else if (k === "customLists") v = mergeLists(base[k], local[k], remote[k]);
+    else if (k === "watchStats") v = mergeStats(base[k], local[k], remote[k]);
     else if (MAP_KEYS.has(k)) v = mergeMap(base[k], local[k], remote[k]);
     else v = pick3(base[k], local[k], remote[k]);
     if (v !== undefined && !(Array.isArray(v) && v.length === 0 && local[k] === undefined && remote[k] === undefined)) {

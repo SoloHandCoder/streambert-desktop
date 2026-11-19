@@ -1,29 +1,23 @@
-// Cloud sync through a private (secret) GitHub Gist — same format as the
-// Streambert Android app, so desktop and phones share history, saved titles,
-// progress and watched episodes.
+// Cloud sync through a private (secret) GitHub Gist. Same format as the
+// Streambert Android app, so computers and phones share every profile's
+// history, saved titles, progress, watched episodes, ratings, lists and stats.
 //
 // Gist "Streambert sync":
 //   streambert-sync.json   { app, version, updatedAt, profiles: [...], deleted: [...] }
-//   profile-<id>.json      { version, updatedAt, profile, data: { saved, history, progress, watched, … } }
-//
-// The desktop has no profiles: it syncs the main profile ("default", called "Me"
-// on Android) and leaves other profiles in the Gist untouched.
-import { mergeProfile, same } from "./syncMerge.js";
+//   profile-<id>.json      { version, updatedAt, profile: {id,name,color}, data: { saved, history, … } }
+import { mergeProfile, mergeProfileList, same } from "./syncMerge.js";
+import { getMeta, readProfileData, writeProfileData, applyProfileList, isPersonalKey } from "../extras/profiles.js";
 
 const API = () => localStorage.getItem("__sb_sync_api") || "https://api.github.com"; // overridable for tests
 const DESC = "Streambert sync";
 const INDEX = "streambert-sync.json";
-const PROFILE_ID = "default";
-const FILE = `profile-${PROFILE_ID}.json`;
 const TOKEN_KEY = "githubSyncToken"; // stored with the OS-encrypted secure storage
 const STATE_KEY = "__sb_sync";
-const BASE_KEY = `__sb_sync_base_${PROFILE_ID}`;
+const BASE = (id) => `__sb_sync_base_${id}`;
 const AUTO_MS = 5 * 60 * 1000;
-const P = "streambert_";
-
-/** keys that belong to the person (same list as the Android profiles) */
-const PERSONAL_KEYS = ["saved", "savedOrder", "progress", "watched", "history", "searchHistory", "episodeReleaseCache", "sourceFailoverCache"];
-const PERSONAL_PREFIXES = ["dlTime_", "dlDur_"]; // resume positions by episode key (portable)
+// resume positions of downloaded files are keyed by this device's file paths → not synced
+const DEVICE_ONLY = ["localPos_"];
+const deviceOnly = (k) => DEVICE_ONLY.some((pre) => k.startsWith(pre));
 
 const listeners = new Set();
 let running = null;
@@ -101,34 +95,10 @@ async function gh(path, { method = "GET", body, tok } = {}) {
   return { data, headers: res.headers };
 }
 
-// ── local data ───────────────────────────────────────────────────────────────
-function isPersonal(fullKey) {
-  if (!fullKey.startsWith(P)) return false;
-  const k = fullKey.slice(P.length);
-  return PERSONAL_KEYS.includes(k) || PERSONAL_PREFIXES.some((p) => k.startsWith(p));
-}
-function readLocal() {
-  const out = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (!k || !isPersonal(k)) continue;
-    try {
-      out[k.slice(P.length)] = JSON.parse(localStorage.getItem(k));
-    } catch {}
-  }
-  return out;
-}
-function writeLocal(data) {
-  const del = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (k && isPersonal(k)) del.push(k);
-  }
-  del.forEach((k) => localStorage.removeItem(k));
-  for (const [k, v] of Object.entries(data)) if (isPersonal(P + k)) localStorage.setItem(P + k, JSON.stringify(v));
-}
-const portable = (data) =>
-  Object.fromEntries(Object.entries(data || {}).filter(([k]) => isPersonal(P + k)));
+// data other Streambert apps keep in a profile that this version doesn't know
+// yet: passed through untouched so a desktop sync never drops it
+const foreign = (data) =>
+  Object.fromEntries(Object.entries(data || {}).filter(([k]) => !isPersonalKey(k) && !deviceOnly(k)));
 
 // ── public API ───────────────────────────────────────────────────────────────
 export async function connect(tok) {
@@ -151,7 +121,7 @@ export async function connect(tok) {
 
 export async function disconnect() {
   await setToken("");
-  localStorage.removeItem(BASE_KEY);
+  for (const p of getMeta().list) localStorage.removeItem(BASE(p.id));
   localStorage.removeItem(STATE_KEY);
   emit();
 }
@@ -173,6 +143,7 @@ async function readGist(id) {
   return files;
 }
 
+/** One full sync of every profile. Safe to call often (does nothing while a sync runs). */
 export function syncNow() {
   if (running) return running;
   running = (async () => {
@@ -199,38 +170,66 @@ async function doSync() {
       else throw e;
     }
   }
-  const now = Date.now();
-  const base = JSON.parse(localStorage.getItem(BASE_KEY) || "{}");
-  const local = readLocal();
-  const remoteData = portable(remote[FILE]?.data);
-  const merged = mergeProfile(base, local, remoteData);
-  let changedLocal = false;
-  if (!same(merged, local)) {
-    writeLocal(merged);
-    changedLocal = true;
-  }
-  localStorage.setItem(BASE_KEY, JSON.stringify(merged));
+  const meta = getMeta();
+  const localIndex = {
+    profiles: meta.list.map(({ id, name, color, editedAt }) => ({ id, name, color, editedAt })),
+    deleted: meta.deleted || [],
+  };
+  const remoteIndex = remote[INDEX] || { profiles: [], deleted: [] };
+  const mergedList = mergeProfileList(localIndex, remoteIndex, meta.current);
+  applyProfileList(mergedList.profiles, mergedList.deleted);
 
-  const files = {};
-  if (!same(merged, remoteData) || !remote[FILE]) {
-    const prof = remote[FILE]?.profile || { id: PROFILE_ID, name: "Me", color: "#e50914" };
-    files[FILE] = { content: JSON.stringify({ version: 1, updatedAt: now, profile: prof, data: merged }) };
+  const now = Date.now();
+  const outFiles = {};
+  let currentChanged = false;
+  for (const p of mergedList.profiles) {
+    const fname = `profile-${p.id}.json`;
+    const base = JSON.parse(localStorage.getItem(BASE(p.id)) || "{}");
+    const all = readProfileData(p.id);
+    const devOnly = {}, local = {};
+    for (const [k, v] of Object.entries(all)) (deviceOnly(k) ? devOnly : local)[k] = v;
+    const remoteRaw = remote[fname]?.data || {};
+    const remoteData = Object.fromEntries(Object.entries(remoteRaw).filter(([k]) => isPersonalKey(k) && !deviceOnly(k)));
+    const merged = mergeProfile(base, local, remoteData);
+    if (!same(merged, local)) {
+      if (writeProfileData(p.id, { ...merged, ...devOnly })) currentChanged = true;
+    }
+    if (!same(merged, remoteData) || !remote[fname]) {
+      outFiles[fname] = {
+        content: JSON.stringify({
+          version: 1,
+          updatedAt: now,
+          profile: { id: p.id, name: p.name, color: p.color },
+          data: { ...foreign(remoteRaw), ...merged },
+        }),
+      };
+    }
+    localStorage.setItem(BASE(p.id), JSON.stringify(merged));
   }
-  const index = remote[INDEX] || { app: "streambert", version: 1, profiles: [], deleted: [] };
-  if (!index.profiles?.some((p) => p.id === PROFILE_ID)) {
-    index.profiles = [...(index.profiles || []), { id: PROFILE_ID, name: "Me", color: "#e50914" }];
-    files[INDEX] = { content: JSON.stringify({ ...index, updatedAt: now }, null, 1) };
+  for (const id of mergedList.deleted) {
+    if (remote[`profile-${id}.json`]) outFiles[`profile-${id}.json`] = null; // delete file
+    localStorage.removeItem(BASE(id));
   }
-  if (Object.keys(files).length) {
+  if (
+    !same(mergedList, { profiles: remoteIndex.profiles || [], deleted: remoteIndex.deleted || [] }) ||
+    !remote[INDEX] ||
+    Object.keys(outFiles).length
+  ) {
+    outFiles[INDEX] = {
+      content: JSON.stringify({ app: "streambert", version: 1, updatedAt: now, ...mergedList }, null, 1),
+    };
+  }
+
+  if (Object.keys(outFiles).length) {
     if (!state().gistId) {
-      if (!files[INDEX]) files[INDEX] = { content: JSON.stringify({ ...index, updatedAt: now }, null, 1) };
+      const files = Object.fromEntries(Object.entries(outFiles).filter(([, v]) => v));
       const { data } = await gh("/gists", { method: "POST", body: { description: DESC, public: false, files } });
       setState({ gistId: data.id });
     } else {
-      await gh(`/gists/${state().gistId}`, { method: "PATCH", body: { files } });
+      await gh(`/gists/${state().gistId}`, { method: "PATCH", body: { files: outFiles } });
     }
   }
-  if (changedLocal) window.dispatchEvent(new Event("streambert:sync-applied"));
+  if (currentChanged) window.dispatchEvent(new Event("streambert:sync-applied"));
 }
 
 /** Auto sync: on start, every 5 minutes, and when the window is hidden / closed. */

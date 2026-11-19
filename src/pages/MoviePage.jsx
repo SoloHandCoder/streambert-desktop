@@ -75,6 +75,8 @@ import {
 import { useSourceId } from "../utils/useSourceId";
 import { setPlayerGamepadActive } from "../utils/gamepadPlayerState";
 import HiAnimeLoader from "../components/HiAnimeLoader";
+import { RateButton, ListsButton } from "../extras/LibraryUI";
+import { usePlayerExtras, SubtitleButton } from "../extras/playerExtras";
 
 export default function MoviePage({
   item,
@@ -126,6 +128,18 @@ export default function MoviePage({
   const sourceRef = useRef(null);
   const playerWrapRef = useRef(null);
   const webviewRef = useRef(null);
+  usePlayerExtras({
+    webviewRef,
+    active: playing,
+    info: {
+      id: item.id,
+      media_type: "movie",
+      title: item.title || item.name || "",
+      poster_path: item.poster_path || null,
+      genres: (item.genres || []).map((g) => g?.name).filter(Boolean),
+    },
+    offsetKey: `movie_${item.id}`,
+  });
   // Always-current refs for interval callbacks, avoids stale closures without restarting the interval
   const saveProgressRef = useRef(saveProgress);
   saveProgressRef.current = saveProgress;
@@ -938,6 +952,8 @@ export default function MoviePage({
                 {isSaved ? <BookmarkFillIcon /> : <BookmarkIcon />}
                 {isSaved ? "Saved" : "Save"}
               </button>
+              <ListsButton item={{ ...item, media_type: "movie" }} />
+              <RateButton item={{ ...item, media_type: "movie" }} />
               {!isUnreleased &&
                 (isWatched ? (
                   <button
@@ -1224,6 +1240,7 @@ export default function MoviePage({
               >
                 <PopOutIcon />
               </button>
+              <SubtitleButton offsetKey={`movie_${item.id}`} />
             </div>
             {showSourceMenu && menuPos && (
               <div

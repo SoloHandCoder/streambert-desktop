@@ -1,22 +1,24 @@
-> **This is a personal copy of [truelockmc/streambert](https://github.com/truelockmc/streambert)** with **cloud sync**: history, saved titles, progress and watched episodes sync with the [Streambert Android app](https://github.com/SoloHandCoder/streambert-android) and other computers through a private GitHub Gist (Settings → Cloud Sync). Updates come from this repo's releases. All credit for Streambert goes to the original author.
+# Streambert Desktop
 
-[![Downloads@latest](https://img.shields.io/github/downloads/truelockmc/streambert/latest/total?style=for-the-badge)](https://codeberg.org/truelockmc/streambert/releases/latest/)
-[![Release Version Badge](https://img.shields.io/github/v/release/truelockmc/streambert?style=for-the-badge)](https://github.com/truelockmc/streambert/releases)
-[![Issues Badge](https://img.shields.io/github/issues/truelockmc/streambert?style=for-the-badge)](https://github.com/truelockmc/streambert/issues)
-[![Closed Issues Badge](https://img.shields.io/github/issues-closed/truelockmc/streambert?color=%238256d0&style=for-the-badge)](https://github.com/truelockmc/streambert/issues?q=is%3Aissue+is%3Aclosed)<br>
+[![Release](https://img.shields.io/github/v/release/SoloHandCoder/streambert-desktop?style=for-the-badge)](https://github.com/SoloHandCoder/streambert-desktop/releases/latest)
+[![Android app](https://img.shields.io/badge/Android-streambert--android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SoloHandCoder/streambert-android)
 
-[![GitHub](https://img.shields.io/badge/GitHub-truelockmc%2Fstreambert-181717?style=for-the-badge&logo=github)](https://github.com/truelockmc/streambert)
-[![Codeberg](https://img.shields.io/badge/Codeberg-truelockmc%2Fstreambert-2185D0?style=for-the-badge&logo=codeberg)](https://codeberg.org/truelockmc/streambert)
-[![AUR Version](https://img.shields.io/aur/version/streambert-bin?style=for-the-badge&logo=archlinux)](https://aur.archlinux.org/packages/streambert-bin)
-# Streambert
-A cross-platform Electron Desktop App to stream and download any Movie, TV Series or Anime in the World. Zero Ads and Tracking[*](#privacy-disclaimer) <br></br>
-<a href="https://trendshift.io/repositories/31115" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/31115" alt="truelockmc%2Fstreambert | Trendshift" width="250" height="55"/></a>
+Stream and download any movie, TV series or anime, with no ads or tracking[*](#privacy-disclaimer). This is the desktop version that goes with the [Streambert Android app](https://github.com/SoloHandCoder/streambert-android). Both apps share your library through cloud sync.
 
 ![Logo](public/logo.svg)
 
-[Installation](#requirements)
+[Download](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) · [Installation](#installation) · [Building from source](#building-from-source)
 
-## Why Streambert?
+## What's in this version
+- ☁️ **Cloud sync:** your watchlist, history, progress, watched episodes, ratings, lists, watch stats and profiles sync with your phone and other computers through a private GitHub Gist (Settings → Cloud Sync).
+- 👥 **Profiles:** everyone in the house gets their own history, watchlist and progress.
+- ⭐ **Your ratings and lists:** rate titles 1 to 5 stars, sort your watchlist by your own rating, and group titles into custom lists.
+- 📊 **Watch stats:** watch time, day streaks, top genres and titles, plus a yearly recap.
+- 💬 **Subtitle style and timing:** change subtitle size, color, background and position, and fix subtitles that are out of sync.
+- 🎬 **Trailers that load:** healthy Invidious servers are found automatically, with YouTube as a fallback.
+- 🔄 **Updates** come from this repo's releases.
+
+## Features
 - 🎦 **Streaming:** Stream any Movie, Anime or TV Series from around the World.
 - 📥 **Downloading:** Download anything you want to watch.
 - 📃 **Subtitles:** Download and manage Subtitles.
@@ -36,8 +38,7 @@ A cross-platform Electron Desktop App to stream and download any Movie, TV Serie
 ![Download Subtitles](screenshots/subs.png)
 ![Download Everything](screenshots/download.png)
 ---
-[![Stargazers](https://reporoster.com/stars/dark/truelockmc/streambert)](https://github.com/truelockmc/streambert/stargazers)
----
+
 ## Streaming
 The Application gets video streams from different hosters/aggregators, see [PLAYER_SOURCES](src/utils/api.js). <br></br>
 It fetches Information for Images, Info Texts, Search and Homepage from [tmdb](https://www.themoviedb.org/).
@@ -57,7 +58,7 @@ Media Files for Animes are scraped from AllManga.to (i stole this mechanic from 
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) (>=22.12.0) installed (only if you aren't using [prebuilt Binaries](https://codeberg.org/truelockmc/streambert/releases/latest))
+- [Node.js](https://nodejs.org/) (>=22.12.0) installed (only if you aren't using [prebuilt Binaries](https://github.com/SoloHandCoder/streambert-desktop/releases/latest))
 - A free TMDB API Read Access Token ([Guide on how to get one](tmdb-tutorial.md))
 - For downloading, [this Program](https://github.com/truelockmc/vid-dl-cli-only/releases/latest) somewhere on your PC and [ffmpeg](https://ffmpeg.org/download.html) installed
 
@@ -68,7 +69,7 @@ It's saved locally, you only need to do this once.
 
 ### Linux, Manual (.deb / .AppImage / .pacman)
 
-Download the latest `.deb` `.pacman` or `.AppImage` from the [Releases](https://codeberg.org/truelockmc/streambert/releases/latest) page.
+Download the latest `.deb` `.pacman` or `.AppImage` from the [Releases](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) page.
 ```bash
 # .deb
 sudo dpkg -i streambert_*.deb
@@ -82,10 +83,10 @@ chmod +x Streambert-x64.AppImage && ./Streambert-x64.AppImage
 
 ### Windows
 
-Download the latest `Streambert Setup *.exe` from the [Releases](https://codeberg.org/truelockmc/streambert/releases/latest) page and run it.
+Download the latest `Streambert Setup *.exe` from the [Releases](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) page and run it.
 
 ### macOS
-Download the latest `Streambert-*-universal.dmg` from the [Releases](https://codeberg.org/truelockmc/streambert/releases/latest) page, open it and drag Streambert to your Applications folder.
+Download the latest `Streambert-*-universal.dmg` from the [Releases](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) page, open it and drag Streambert to your Applications folder.
 
 ---
 
@@ -133,14 +134,16 @@ npm run dist
 > - **libcrypt.so.1 error:** `sudo pacman -S libxcrypt-compat`
 > - **http-parser dependency error:** `yay -S http-parser` (from AUR)
 
+## Credits
+Streambert was created by [truelockmc](https://github.com/truelockmc/streambert). This version is built on their work, and all credit for the original app goes to them.
+
 ## License
 This project is open-source software licensed under the GNU General Public License v3.0 [(GPL-3.0)](LICENSE).
 
 Forks may be created but they MUST stay open-sourced.
 
 ## Contributing
-Everyone is welcome to contribute to this project.
-Before contributing please make sure to read the [Contributing Guidelines](CONTRIBUTING.md) and act accordingly.
+Ideas and bug reports for this version are welcome in this repo's issues. Changes to the core app are best sent to the [original project](https://github.com/truelockmc/streambert).
 
 ## Privacy Disclaimer
 Streambert itself does not collect ANY data. There is no centralized service which the app relies on.
@@ -169,7 +172,6 @@ This application is provided "as is" for educational purposes. The developer:
 - Does not control third-party content providers
 - Encourages users to support content creators through legal means
 
-[![RepoStars](https://repostars.dev/api/embed?repo=truelockmc%2Fstreambert&theme=dark)](https://repostars.dev/?repos=truelockmc%2Fstreambert&theme=dark)
 
 <details>
     <summary>Project Structure</summary>

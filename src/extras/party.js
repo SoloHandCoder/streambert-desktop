@@ -29,6 +29,8 @@ export function getParty() {
     chat: S.chat.slice(-100),
     media: S.media,
     remoteMedia: S.remoteMedia,
+    hostId: S.host,
+    isHost: S.host === S.me,
   };
 }
 
@@ -69,7 +71,7 @@ async function open(buf) {
 
 function send(msg) {
   if (!S?.client?.connected) return;
-  seal({ ...msg, from: S.me, name: S.name, at: Date.now() })
+  seal({ ...msg, from: S.me, name: S.name, host: S.host === S.me, joinedAt: S.joinedAt, at: Date.now() })
     .then((data) => S?.client?.publish(S.topic, data, { qos: 0 }))
     .catch(() => {});
 }
@@ -97,12 +99,16 @@ async function connect(broker) {
 /** start a new party (code = null) or join one */
 export async function joinParty(code, name) {
   await leaveParty();
+  const starting = !code; // whoever starts a party hosts it
   code = code ? cleanCode(code) : cleanCode(newCode());
   if (code.length < 8) throw new Error("That code looks too short.");
   const pretty = `${code.slice(0, 5)}-${code.slice(5)}`;
   const { key, topic } = await derive(code);
   S = { code: pretty, key, topic, me: Math.random().toString(36).slice(2, 10), name: (name || "Guest").slice(0, 24), members: new Map(), chat: [], status: "connecting", media: null, remoteMedia: null, applyUntil: 0 };
-  S.members.set(S.me, { id: S.me, name: S.name, joinedAt: Date.now(), me: true });
+  // whoever starts the party hosts it
+  S.joinedAt = Date.now();
+  S.host = starting ? S.me : null;
+  S.members.set(S.me, { id: S.me, name: S.name, joinedAt: S.joinedAt, me: true });
   emit();
   let client = null, lastErr = null;
   for (const b of BROKERS) {
@@ -142,6 +148,7 @@ export async function joinParty(code, name) {
     // members that went quiet are gone
     const now = Date.now();
     for (const [id, m] of S.members) if (!m.me && now - (m.seenAt || 0) > 45000) S.members.delete(id);
+    if (S.host && !S.members.has(S.host)) hostLeft();
     emit();
   }, 15000);
   emit();
@@ -162,6 +169,17 @@ export async function leaveParty() {
   emit();
 }
 
+// the host left: whoever has been in the party longest takes over
+function hostLeft() {
+  const old = S.host;
+  S.host = null;
+  const next = [...S.members.values()].sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0) || String(a.id).localeCompare(String(b.id)))[0];
+  if (!next) return;
+  S.host = next.id;
+  if (old) addChat({ sys: true, text: `${next.me ? "You are" : next.name + " is"} now the host`, at: Date.now() });
+  if (next.me) send({ type: "ping", media: S.media });
+}
+
 function addChat(entry) {
   S.chat.push(entry);
   if (S.chat.length > 200) S.chat.splice(0, S.chat.length - 200);
@@ -174,19 +192,31 @@ export const setPartyPlayer = (fn) => (applyHandler = fn);
 function onMessage(m) {
   if (!S || !m || m.from === S.me) return;
   const known = S.members.get(m.from);
-  S.members.set(m.from, { id: m.from, name: String(m.name || "Guest").slice(0, 24), joinedAt: known?.joinedAt || m.at || Date.now(), seenAt: Date.now() });
+  S.members.set(m.from, { id: m.from, name: String(m.name || "Guest").slice(0, 24), joinedAt: m.joinedAt || known?.joinedAt || m.at || Date.now(), seenAt: Date.now() });
+  if (m.host) {
+    // two hosts (after a hand-over race): the one who joined first keeps it
+    if (S.host === S.me && S.host !== m.from) {
+      const mine = S.joinedAt || 0, theirs = m.joinedAt || 0;
+      if (theirs < mine || (theirs === mine && m.from < S.me)) S.host = m.from;
+    } else S.host = m.from;
+  }
   if (m.media) S.remoteMedia = { ...m.media, by: m.name };
   switch (m.type) {
     case "hello":
-      if (!known) addChat({ sys: true, text: `${m.name} joined`, at: Date.now() });
+      if (!known) {
+        addChat({ sys: true, text: `${m.name} joined`, at: Date.now() });
+        notify({ name: m.name, text: "joined the party", sys: true, host: !!m.host });
+      }
       send({ type: "ping", media: S.media, state: S.lastState || null }); // let them know we're here
       break;
     case "bye":
       S.members.delete(m.from);
       addChat({ sys: true, text: `${m.name} left`, at: Date.now() });
+      if (S.host === m.from) hostLeft();
       break;
     case "chat":
       addChat({ from: m.from, name: m.name, text: String(m.text || "").slice(0, 500), at: m.at });
+      notify({ name: m.name, text: String(m.text || "").slice(0, 140), host: !!m.host });
       break;
     case "react":
       window.dispatchEvent(new CustomEvent("streambert:party-react", { detail: { emoji: String(m.emoji || "").slice(0, 4), name: m.name } }));
@@ -200,6 +230,11 @@ function onMessage(m) {
       break;
   }
   emit();
+}
+
+// for the small pop-up when the chat isn't open
+function notify(d) {
+  window.dispatchEvent(new CustomEvent("streambert:party-message", { detail: d }));
 }
 
 const fmt = (s) => {

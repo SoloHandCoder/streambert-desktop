@@ -118,3 +118,70 @@ html[data-mobile] .sbpt-panel {
 html[data-mobile] .sbpt-pill { bottom: calc(var(--m-nav-h, 64px) + var(--m-safe-b, 0px) + 12px); right: 12px; }
 html[data-mobile][data-player-fullscreen] .sbpt-panel,
 html[data-mobile][data-player-fullscreen] .sbpt-pill { bottom: 16px; }
+
+/* host */
+.sbpt-title { display: flex; flex-direction: column; line-height: 1.2; }
+.sbpt-hostline { font-size: 12px; font-weight: 500; color: var(--text3); margin-top: 2px; }
+.sbpt-host-tag { color: #f2c94c; font-weight: 700; }
+.sbpt-crown { margin-right: 3px; font-size: 0.95em; }
+.sbpt-member.host { border-color: #f2c94c; background: rgba(242, 201, 76, 0.12); }
+.sbpt-host-label {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #f2c94c;
+  color: #1a1400;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+/* pop-ups for new messages while the panel is closed */
+.sbpt-pops {
+  position: fixed;
+  right: 20px;
+  bottom: 74px;
+  z-index: 2147483500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: min(320px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.sbpt-pop {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  max-width: 100%;
+  padding: 7px 12px;
+  border-radius: 14px 14px 4px 14px;
+  border: 1px solid var(--border);
+  background: rgba(20, 20, 20, 0.94);
+  color: #fff;
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  animation: sbptPop 0.32s var(--sb-ease-spring, ease) backwards, sbptPopOut 0.35s ease-in 4.1s forwards;
+}
+.sbpt-pop.sys { opacity: 0.9; }
+.sbpt-pop-name { font-size: 11px; font-weight: 800; color: #ff6b73; }
+.sbpt-pop-text {
+  font-size: 13px;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+@keyframes sbptPop { from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes sbptPopOut { to { opacity: 0; transform: translate3d(0, -6px, 0); } }
+html[data-mobile] .sbpt-pops {
+  right: 12px;
+  bottom: calc(var(--m-nav-h, 64px) + var(--m-safe-b, 0px) + 66px);
+}
+html[data-mobile][data-player-fullscreen] .sbpt-pops { bottom: 66px; }

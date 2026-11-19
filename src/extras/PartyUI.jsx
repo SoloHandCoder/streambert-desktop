@@ -58,6 +58,22 @@ export function PartyDock() {
   const [text, setText] = useState("");
   const [copied, setCopied] = useState(false);
   const chatRef = useRef(null);
+  const [pops, setPops] = useState([]);
+  const openRef = useRef(open);
+  openRef.current = open;
+  useEffect(() => {
+    const h = (e) => {
+      if (openRef.current) return; // the chat is open anyway
+      const id = Math.random();
+      setPops((a) => [...a.slice(-2), { id, ...e.detail }]);
+      setTimeout(() => setPops((a) => a.filter((x) => x.id !== id)), 4500);
+    };
+    window.addEventListener("streambert:party-message", h);
+    return () => window.removeEventListener("streambert:party-message", h);
+  }, []);
+  useEffect(() => {
+    if (open) setPops([]);
+  }, [open]);
 
   useEffect(() => {
     const h = () => setOpen(true);
@@ -90,13 +106,30 @@ export function PartyDock() {
   if (!open) {
     if (!p) return null;
     return (
-      <button className="sbpt-pill" onClick={() => setOpen(true)} title="Watch party">
-        <PartyIcon size={18} />
-        <span>{p.members.length}</span>
-        {p.status !== "connected" && <span className="sbpt-dot" />}
-      </button>
+      <>
+        {pops.length > 0 && (
+          <div className="sbpt-pops">
+            {pops.map((m) => (
+              <button key={m.id} className={`sbpt-pop${m.sys ? " sys" : ""}`} onClick={() => setOpen(true)}>
+                <span className="sbpt-pop-name" data-no-i18n>
+                  {m.host && <span className="sbpt-crown" aria-label="Host">👑</span>}
+                  {m.name}
+                </span>
+                <span className="sbpt-pop-text" data-no-i18n={m.sys ? undefined : true}>{m.text}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <button className="sbpt-pill" onClick={() => setOpen(true)} title="Watch party">
+          <PartyIcon size={18} />
+          <span>{p.members.length}</span>
+          {p.isHost && <span className="sbpt-crown" title="You're the host">👑</span>}
+          {p.status !== "connected" && <span className="sbpt-dot" />}
+        </button>
+      </>
     );
   }
+  const host = p?.members.find((m) => m.id === p.hostId);
 
   const elsewhere = p?.remoteMedia && !sameMedia(p.remoteMedia, p.media) ? p.remoteMedia : null;
 
@@ -104,7 +137,21 @@ export function PartyDock() {
     <div className="sbpt-panel" role="dialog" aria-label="Watch party">
       <div className="sbpt-head">
         <PartyIcon size={18} />
-        <div className="sbpt-title">Watch party</div>
+        <div className="sbpt-title">
+          Watch party
+          {p && (
+            <div className="sbpt-hostline">
+              {p.isHost ? (
+                <span className="sbpt-host-tag">👑 You're the host</span>
+              ) : host ? (
+                <>
+                  <span className="sbpt-hosted">Hosted by</span>{" "}
+                  <span className="sbpt-host-tag" data-no-i18n>👑 {host.name}</span>
+                </>
+              ) : null}
+            </div>
+          )}
+        </div>
         <button className="icon-btn sbpt-x" onClick={() => setOpen(false)} aria-label="Close">✕</button>
       </div>
 
@@ -157,8 +204,12 @@ export function PartyDock() {
           </div>
           {p.status !== "connected" && <div className="sbpt-err">Reconnecting…</div>}
           <div className="sbpt-members">
-            {p.members.map((m) => (
-              <span key={m.id} className={`sbpt-member${m.me ? " me" : ""}`} data-no-i18n>{m.name}</span>
+            {[...p.members].sort((a, b) => (b.id === p.hostId) - (a.id === p.hostId)).map((m) => (
+              <span key={m.id} className={`sbpt-member${m.me ? " me" : ""}${m.id === p.hostId ? " host" : ""}`} data-no-i18n>
+                {m.id === p.hostId && <span className="sbpt-crown">👑</span>}
+                {m.name}
+                {m.id === p.hostId && <span className="sbpt-host-label">Host</span>}
+              </span>
             ))}
           </div>
           {p.members.length < 2 && <div className="sbx-muted" style={{ margin: "6px 0" }}>Send the code to a friend so they can join.</div>}
@@ -179,7 +230,12 @@ export function PartyDock() {
                 <div key={i} className="sbpt-sys" data-no-i18n>{c.text}</div>
               ) : (
                 <div key={i} className={`sbpt-msg${c.me ? " me" : ""}`} data-no-i18n>
-                  {!c.me && <span className="sbpt-who">{c.name}</span>}
+                  {!c.me && (
+                    <span className="sbpt-who">
+                      {c.from === p.hostId && <span className="sbpt-crown">👑</span>}
+                      {c.name}
+                    </span>
+                  )}
                   {c.text}
                 </div>
               ),

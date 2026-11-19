@@ -571,6 +571,11 @@ export default function DownloadModal({
       }
     }
 
+    const full = await (await import("../extras/smartDownloads.js")).storageLimitReached();
+    if (full) {
+      setDownloadStatus(full);
+      return;
+    }
     const result = await window.electron.runDownload({
       token: downloader.token,
       m3u8Url,

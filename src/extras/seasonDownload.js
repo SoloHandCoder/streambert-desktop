@@ -123,6 +123,12 @@ export async function downloadSeason(o) {
     downloadPath = JSON.parse(localStorage.getItem("streambert_downloadPath") || '""') || "";
     folder = JSON.parse(localStorage.getItem("streambert_downloaderFolder") || '""') || "";
   } catch {}
+  const full = await (await import("./smartDownloads.js")).storageLimitReached();
+  if (full) {
+    show(full, 0);
+    hide(6000);
+    return;
+  }
   const dl = folder ? await el.checkDownloader(folder).catch(() => null) : null;
   if (!downloadPath || !dl?.exists) {
     show("Set a download folder and the downloader in Settings → Downloads first.", 0);
@@ -151,7 +157,7 @@ export async function downloadSeason(o) {
         await sleep(4000);
       }
       if (job.cancelled) break;
-      show(`Season ${o.season}: getting episode ${n} (${i + 1}/${todo.length})…`, job.frac);
+      show(`${o.label ? o.label + " · " : ""}Season ${o.season}: getting episode ${n} (${i + 1}/${todo.length})…`, job.frac);
       let url = null;
       try {
         if (o.async) {

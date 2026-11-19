@@ -367,7 +367,7 @@ export function StatsSection({ apiKey, onSelect }) {
     for (let i = 6; i >= 0; i--) {
       const x = new Date(d);
       x.setDate(d.getDate() - i);
-      out.push({ k: dayKey(x), label: x.toLocaleDateString(undefined, { weekday: "narrow" }), s: stats.days[dayKey(x)] || 0 });
+      out.push({ k: dayKey(x), label: x.toLocaleDateString(document.documentElement.lang || undefined, { weekday: "narrow" }), s: stats.days[dayKey(x)] || 0 });
     }
     return out;
   }, [stats]);
@@ -432,7 +432,7 @@ function useGenres(titles, apiKey) {
   return (t) => (t.genres?.length ? t.genres : map[`${t.media_type}_${t.id}`] || []);
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = Array.from({ length: 12 }, (_, i) => new Date(2020, i, 1).toLocaleDateString(document.documentElement.lang || undefined, { month: "short" }).replace(".", ""));
 
 function StatsPage({ apiKey, onClose, onSelect }) {
   useLibraryExtras([K_STATS]);

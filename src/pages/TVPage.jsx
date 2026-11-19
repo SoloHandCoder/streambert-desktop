@@ -87,6 +87,7 @@ import HiAnimeLoader from "../components/HiAnimeLoader";
 import { RateButton, ListsButton } from "../extras/LibraryUI";
 import { usePlayerExtras, SubtitleButton } from "../extras/playerExtras";
 import { downloadSeason } from "../extras/seasonDownload";
+import { CastButton } from "../extras/CastUI";
 
 // ── Partial-circle progress icon (cached per pct tier) ───────────────────────
 // Uses a single SVG arc. Three instances (25/50/75)
@@ -514,6 +515,7 @@ export default function TVPage({
       title: item.name || item.title || "",
       poster_path: item.poster_path || null,
       genres: (item.genres || []).map((g) => g?.name).filter(Boolean),
+      episodeLabel: selectedEp ? `S${selectedSeason}E${selectedEp.episode_number}${selectedEp.name ? ` · ${selectedEp.name}` : ""}` : "",
     },
     offsetKey: subOffsetKey,
   });
@@ -889,6 +891,30 @@ export default function TVPage({
     });
     return () => window.electron.offM3u8Found(handler);
   }, []);
+
+
+  // Chromecast: the stream this player found, from where it is now; the video
+  // here pauses once the TV takes over
+  const getCastWhat = async () => {
+    if (!m3u8Url) return null;
+    const wv = webviewRef.current;
+    let t = 0;
+    try {
+      t = (await window.electron.queryVideoProgress(wv.getWebContentsId()))?.currentTime || 0;
+    } catch {}
+    return {
+      url: m3u8Url,
+      title: item.name || item.title || "",
+      subtitle: selectedEp ? `S${selectedSeason}E${selectedEp.episode_number}${selectedEp.name ? " · " + selectedEp.name : ""}` : "",
+      poster_path: item.poster_path || null,
+      startTime: t,
+      onStarted: () => {
+        try {
+          window.electron.playerTick(wv.getWebContentsId(), "(() => { document.querySelectorAll('video').forEach((v) => v.pause()); return null; })()");
+        } catch {}
+      },
+    };
+  };
 
   // Close source dropdown on scroll or click-outside
   useEffect(() => {
@@ -2351,6 +2377,7 @@ export default function TVPage({
                     <PopOutIcon />
                   </button>
                   <SubtitleButton offsetKey={subOffsetKey} />
+                  <CastButton getWhat={getCastWhat} />
                 </div>
                 {showSourceMenu && menuPos && (
                   <div

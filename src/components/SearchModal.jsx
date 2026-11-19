@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { parseLink, openLink } from "../extras/incoming";
 import { tmdbFetch, imgUrl } from "../utils/api";
 import { SearchIcon, CloseIcon } from "./Icons";
 import { storage } from "../utils/storage";
@@ -103,7 +104,14 @@ export default function SearchModal({ apiKey, onSelect, onClose, offline }) {
 
   const handleKey = (e) => {
     if (e.key === "Escape") onClose();
-    if (e.key === "Enter" && query.trim()) addToHistory(query);
+    if (e.key === "Enter" && query.trim()) {
+      const link = parseLink(query);
+      if (link) {
+        openLink(link).then((ok) => ok && onClose());
+        return;
+      }
+      addToHistory(query);
+    }
   };
 
   const showHistory = !query && history.length > 0;

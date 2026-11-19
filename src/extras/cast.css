@@ -1,0 +1,30 @@
+.sbc-scan { display: flex; align-items: center; gap: 10px; margin: 6px 0 12px; }
+.sbc-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: sbcPulse 1s ease-in-out infinite;
+}
+@keyframes sbcPulse { 50% { transform: scale(0.6); opacity: 0.5; } }
+.sbc-picker .sbx-list-row svg { flex-shrink: 0; color: var(--text2); }
+.sbc-bar {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 5600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 460px;
+  padding: 10px 12px 10px 16px;
+  border-radius: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+  animation: sbToastIn 0.4s var(--sb-ease-spring, ease) backwards;
+}
+.sbc-bar svg { color: var(--red); flex-shrink: 0; }
+.sbc-bar__text { flex: 1; min-width: 0; }
+.sbc-bar__title { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

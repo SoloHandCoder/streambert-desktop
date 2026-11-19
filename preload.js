@@ -32,6 +32,23 @@ contextBridge.exposeInMainWorld("electron", {
   // Download actions
   checkDownloader: (folder) => ipcRenderer.invoke("check-downloader", folder),
   runDownload: (args) => ipcRenderer.invoke("run-download", args),
+  // streambert:// links + taskbar jump list
+  onOpenLink: (cb) => {
+    const h = (_, url) => cb(url);
+    ipcRenderer.on("open-link", h);
+    return () => ipcRenderer.removeListener("open-link", h);
+  },
+  takePendingLink: () => ipcRenderer.invoke("take-pending-link"),
+  // Chromecast
+  castDiscover: () => ipcRenderer.invoke("cast-discover"),
+  castStart: (args) => ipcRenderer.invoke("cast-start", args),
+  castControl: (cmd, value) => ipcRenderer.invoke("cast-control", { cmd, value }),
+  onCastState: (cb) => {
+    const h = (_, st) => cb(st);
+    ipcRenderer.on("cast-state", h);
+    return () => ipcRenderer.removeListener("cast-state", h);
+  },
+  setRecentItems: (items) => ipcRenderer.invoke("set-recent-items", items),
   pauseDownload: (id) => ipcRenderer.invoke("pause-download", { id }),
   resumeDownload: (id, token) => ipcRenderer.invoke("resume-download", { id, token }),
   getDownloads: () => ipcRenderer.invoke("get-downloads"),

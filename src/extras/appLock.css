@@ -1,0 +1,47 @@
+.sb-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: sbFade 0.2s ease-out;
+  -webkit-app-region: drag;
+}
+.sb-lock--out { opacity: 0; transition: opacity 0.25s; }
+.sb-lock__box {
+  -webkit-app-region: no-drag;
+  width: 320px;
+  padding: 32px 28px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.sb-lock__box.shake { animation: sbShake 0.4s; }
+@keyframes sbShake {
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.sb-lock__logo { width: 64px; height: 64px; }
+.sb-lock__title { font-size: 18px; font-weight: 700; color: var(--text); }
+.sb-lock__input {
+  width: 100%;
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  outline: none;
+}
+.sb-lock__input:focus { border-color: var(--red); }
+.sb-lock__msg { min-height: 18px; font-size: 13px; color: var(--red); }
+.sb-lock__btn { width: 100%; justify-content: center; }

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import CloudSyncSection from "../components/CloudSyncSection";
 import ProfilesSection from "../extras/ProfilesSection";
+import SmartDownloadSettings from "../extras/SmartDownloadSettings";
+import { LANGUAGES, languageSetting, setLanguageSetting, systemLanguage } from "../extras/i18n.js";
 import { builtInPlayerEnabled, setBuiltInPlayer } from "../extras/localPlayer";
 import { SubtitleStylePicker } from "../extras/playerExtras";
 import UpdateModal from "../components/UpdateModal";
@@ -1883,6 +1885,32 @@ function StartPageSection() {
   );
 }
 
+// ── App language (UI) ─────────────────────────────────────────────────────────
+function AppLanguageSection() {
+  const [v, setV] = useState(languageSetting);
+  const sys = LANGUAGES.find((l) => l.code === systemLanguage())?.name || "English";
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div className="settings-section-title">App language</div>
+      <div style={{ fontSize: 13, color: "var(--text3)", marginBottom: 12, lineHeight: 1.6 }}>
+        Language of Streambert's menus and buttons. Movie and show info uses the metadata language below.
+      </div>
+      <SettingsSelect
+        value={v}
+        onChange={(x) => {
+          setV(x);
+          setLanguageSetting(x);
+          setTimeout(() => location.reload(), 150);
+        }}
+        options={[
+          { value: "system", label: `System language (${sys})` },
+          ...LANGUAGES.map((l) => ({ value: l.code, label: l.name })),
+        ]}
+      />
+    </div>
+  );
+}
+
 // ── TMDB Metadata Language ────────────────────────────────────────────────────
 const TMDB_LANGUAGES = [
   { value: "en-US", label: "English (en-US)" },
@@ -3735,6 +3763,10 @@ export default function SettingsPage({
 
           <Divider />
 
+          <AppLanguageSection />
+
+          <Divider />
+
           <TmdbLanguageSection />
         </div>
 
@@ -4330,6 +4362,7 @@ export default function SettingsPage({
               </div>
             )}
           </div>
+          <SmartDownloadSettings />
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════ */}

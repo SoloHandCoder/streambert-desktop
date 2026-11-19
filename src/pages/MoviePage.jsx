@@ -77,6 +77,7 @@ import { setPlayerGamepadActive } from "../utils/gamepadPlayerState";
 import HiAnimeLoader from "../components/HiAnimeLoader";
 import { RateButton, ListsButton } from "../extras/LibraryUI";
 import { usePlayerExtras, SubtitleButton } from "../extras/playerExtras";
+import { CastButton } from "../extras/CastUI";
 
 export default function MoviePage({
   item,
@@ -488,6 +489,30 @@ export default function MoviePage({
     });
     return () => window.electron.offM3u8Found(handler);
   }, []);
+
+
+  // Chromecast: the stream this player found, from where it is now; the video
+  // here pauses once the TV takes over
+  const getCastWhat = async () => {
+    if (!m3u8Url) return null;
+    const wv = webviewRef.current;
+    let t = 0;
+    try {
+      t = (await window.electron.queryVideoProgress(wv.getWebContentsId()))?.currentTime || 0;
+    } catch {}
+    return {
+      url: m3u8Url,
+      title: item.title || item.name || "",
+      subtitle: "Movie",
+      poster_path: item.poster_path || null,
+      startTime: t,
+      onStarted: () => {
+        try {
+          window.electron.playerTick(wv.getWebContentsId(), "(() => { document.querySelectorAll('video').forEach((v) => v.pause()); return null; })()");
+        } catch {}
+      },
+    };
+  };
 
   // Close source dropdown on scroll or click-outside
   useEffect(() => {
@@ -1243,6 +1268,7 @@ export default function MoviePage({
                 <PopOutIcon />
               </button>
               <SubtitleButton offsetKey={`movie_${item.id}`} />
+              <CastButton getWhat={getCastWhat} />
             </div>
             {showSourceMenu && menuPos && (
               <div

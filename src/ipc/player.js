@@ -1006,4 +1006,5 @@ module.exports = {
   registerAudioDeviceRecovery,
   rememberStreamMeta,
   hasStreamMeta,
+  getStreamMeta: (url) => streamMeta.get(url) || null,
 };

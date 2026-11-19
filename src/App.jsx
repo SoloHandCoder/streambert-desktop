@@ -36,6 +36,9 @@ import { useGamepadNav } from "./utils/useGamepadNav";
 import { initCloudSync } from "./sync/cloudSync";
 import { getMyRating, useLibraryExtras, K_RATINGS } from "./extras/libraryExtras.js";
 import { initProfiles } from "./extras/profiles.js";
+import { initIncoming } from "./extras/incoming.js";
+import { CastBar } from "./extras/CastUI";
+import { onEpisodeWatched, setSmartApiKey } from "./extras/smartDownloads.js";
 
 // Lazy-loaded pages: each chunk is only downloaded when the user first visits
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -482,6 +485,7 @@ export default function App() {
     return () => window.electron.offDownloadProgress(handler);
   }, []);
 
+  setSmartApiKey(apiKey);
   const handleDownloadStarted = useCallback((newEntry) => {
     setDownloads((prev) => {
       // Guard: if a progress event already added this id (race), just update it
@@ -494,6 +498,7 @@ export default function App() {
       return [newEntry, ...prev];
     });
   }, []);
+  window.__sbDownloadStarted = handleDownloadStarted;
 
   const handleDeleteDownload = useCallback((id) => {
     setDownloads((prev) => prev.filter((d) => d.id !== id));
@@ -666,6 +671,7 @@ export default function App() {
     window.addEventListener("streambert:sync-applied", reload);
     initCloudSync();
     initProfiles();
+    initIncoming();
     return () => window.removeEventListener("streambert:sync-applied", reload);
   }, []);
 
@@ -797,6 +803,30 @@ export default function App() {
     [navigate],
   );
 
+  // navigation for links / taskbar shortcuts (src/extras/incoming.js)
+  useEffect(() => {
+    window.__sbNav = {
+      open: (item) => handleSelectResult(item),
+      go: (pg) => {
+        setShowSearch(false);
+        setPage(pg);
+      },
+      openSearch: () => setShowSearch(true),
+      markWatched: (key) => markWatchedRef.current?.(key),
+      continueWatching: () => {
+        let h = null;
+        try {
+          h = JSON.parse(localStorage.getItem("streambert_history") || "[]")[0];
+        } catch {}
+        if (h) handleSelectResult(h);
+        return !!h;
+      },
+    };
+    return () => {
+      delete window.__sbNav;
+    };
+  }, [handleSelectResult]);
+
   const saveApiKey = useCallback((key) => {
     secureStorage.set("apikey", key);
     setApiKey(key);
@@ -907,13 +937,16 @@ export default function App() {
     });
   }, []); // no deps needed
 
+  const markWatchedRef = useRef(null);
   const markWatched = useCallback((key) => {
+    onEpisodeWatched(key);
     setWatched((prev) => {
       const next = { ...prev, [key]: true };
       storage.set("watched", next);
       return next;
     });
   }, []);
+  markWatchedRef.current = markWatched;
 
   const markUnwatched = useCallback((key) => {
     setWatched((prev) => {
@@ -1088,6 +1121,7 @@ export default function App() {
                 onMarkUnwatched={markUnwatched}
                 history={history}
                 apiKey={apiKey}
+                saved={saved}
               />
             )}
             {page === "movie" && selected && (
@@ -1255,6 +1289,7 @@ export default function App() {
           />
         )}
         {toast && <div className="toast">{toast}</div>}
+        <CastBar />
 
         {/* ── Episode check status pill / result card ── */}
         {episodeCheckStatus && (

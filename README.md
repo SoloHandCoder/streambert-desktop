@@ -16,6 +16,11 @@ Stream and download any movie, TV series or anime, with no ads or tracking[*](#p
 - 📊 **Watch stats:** watch time, day streaks, top genres and titles, plus a yearly recap.
 - 💬 **Subtitle style and timing:** change subtitle size, color, background and position, and fix subtitles that are out of sync.
 - 🎬 **Trailers that load:** healthy Invidious servers are found automatically, with YouTube as a fallback.
+- 📅 **Coming up:** next episodes of your shows and release dates of movies on your watchlist, with a calendar. Plus "Because you watched …" rows.
+- ▶️ **Built-in player for downloads**, a **Download season** button, **pause / resume**, **smart downloads** (the next 1–3 episodes download automatically) and a **storage limit**.
+- 📺 **Chromecast:** send what you're watching, or a download, to your TV.
+- 🌍 **Your language:** English, Deutsch, Español, Français, Italiano, Português (follows your system language).
+- 🔒 **App lock** with a PIN, **taskbar shortcuts** ("Continue watching"), TMDB / IMDb links in search, and smoother animations.
 - 🔄 **Updates** come from this repo's releases.
 
 ## Features

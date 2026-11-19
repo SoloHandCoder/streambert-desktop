@@ -7,6 +7,8 @@ import { useRatings, getRatingForItem } from "../utils/useRatings";
 import { isRestricted } from "../utils/ageRating";
 import { storage } from "../utils/storage";
 import { loadHomeLayout, loadHomeViewMode } from "../utils/homeLayout";
+import { UpcomingRow } from "../extras/DiscoveryUI";
+import { loadBecauseRows } from "../extras/discovery";
 
 /**
  * Extract up to `count` unique, recently watched items from the user's
@@ -46,8 +48,11 @@ export default function HomePage({
   onMarkUnwatched,
   history,
   apiKey,
+  saved,
 }) {
   const hero = trending[0];
+  const isMobile = !!window.electron?.isMobile;
+  const [becauseRows, setBecauseRows] = useState([]);
 
   const [recommendedItems, setRecommendedItems] = useState([]);
   const [topRatedItems, setTopRatedItems] = useState([]);
@@ -66,8 +71,9 @@ export default function HomePage({
       ...trendingTV.map((i) => ({ ...i, media_type: "tv" })),
       ...recommendedItems,
       ...topRatedItems,
+      ...becauseRows.flatMap((r) => r.items),
     ],
-    [inProgress, trending, trendingTV, recommendedItems, topRatedItems],
+    [inProgress, trending, trendingTV, recommendedItems, topRatedItems, becauseRows],
   );
 
   const { ratingsMap, ageLimitSetting } = useRatings(allItems);
@@ -160,6 +166,19 @@ export default function HomePage({
       });
 
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKey, offline, history?.length]);
+
+  // "Because you watched …" rows
+  useEffect(() => {
+    if (!apiKey || offline || !history?.length) return;
+    let alive = true;
+    loadBecauseRows(apiKey, history, { count: 3 })
+      .then((rows) => alive && setBecauseRows(rows))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiKey, offline, history?.length]);
 
@@ -418,6 +437,30 @@ export default function HomePage({
               ratingsMap={enrichedRatingsMap}
             />
           );
+        }
+
+        if (id === "upcoming") {
+          return (
+            <UpcomingRow key="upcoming" apiKey={apiKey} saved={saved} history={history} onSelect={onSelect} />
+          );
+        }
+
+        if (id === "because") {
+          return becauseRows.map((row) => {
+            const items = row.items.filter((item) => !itemRestricted(item));
+            if (items.length < 4) return null;
+            const key = `because_${row.source.media_type}_${row.source.id}`;
+            if (viewMode === "list") return renderList(key, "Because you watched", row.source.title, items);
+            return (
+              <TrendingCarousel
+                key={key}
+                items={items}
+                title={`Because you watched ${row.source.title}`}
+                onSelect={onSelect}
+                ratingsMap={enrichedRatingsMap}
+              />
+            );
+          });
         }
 
         if (id === "topRated") {

@@ -6,6 +6,7 @@ import { useRatings, getRatingForItem } from "../utils/useRatings";
 import { isRestricted } from "../utils/ageRating";
 import { storage, STORAGE_KEYS } from "../utils/storage";
 import { MyListsSection, StatsSection } from "../extras/LibraryUI";
+import { UpcomingSection } from "../extras/DiscoveryUI";
 
 export default function LibraryPage({
   history,
@@ -128,6 +129,8 @@ export default function LibraryPage({
         </div>
       )}
 
+      <UpcomingSection apiKey={apiKey} saved={saved} history={history} onSelect={onSelect} />
+
       <MyListsSection
         onSelect={onSelect}
         watched={watched}
@@ -181,7 +184,7 @@ export default function LibraryPage({
                             {" · "}
                           </>
                         )}
-                      {new Date(item.watchedAt).toLocaleDateString("en-US", {
+                      {new Date(item.watchedAt).toLocaleDateString(document.documentElement.lang || "en-US", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",

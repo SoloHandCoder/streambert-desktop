@@ -3,6 +3,7 @@
 // the sbmedia:// protocol (src/ipc/localMedia.js). Falls back to mpv/VLC/the
 // system player for formats Chromium can't play or when turned off in Settings.
 import { trackWatchSecond } from "./libraryExtras.js";
+import { openCastPicker } from "./CastUI";
 
 const SETTING = "streambert_builtInPlayer"; // default on
 const PLAYABLE = /\.(mp4|m4v|webm|mkv|mov|m3u8)$/i;
@@ -34,6 +35,16 @@ function onMessage(e) {
   if (!d || typeof d !== "object" || d.__sb !== "player") return;
   if (d.cmd === "close") closeLocalPlayer();
   else if (d.cmd === "position") savePos(Number(d.t) || 0, Number(d.d) || 0);
+  else if (d.cmd === "cast") {
+    const c = current;
+    openCastPicker({
+      filePath: c.filePath,
+      title: c.title,
+      poster_path: c.media?.poster_path || null,
+      startTime: Number(d.t) || 0,
+      onStarted: () => closeLocalPlayer(),
+    });
+  }
 }
 
 function savePos(t, d) {
@@ -103,6 +114,7 @@ export function openLocalPlayer({ filePath, seconds = 0, subtitlePaths = [], tit
   if (seconds > 0) p.set("t", String(Math.floor(seconds)));
   p.set("close", "1");
   p.set("pc", "1");
+  if (window.electron?.castDiscover && !/\.m3u8$/i.test(filePath)) p.set("cast", "1");
   if (/\.m3u8$/i.test(filePath)) p.set("type", "hls");
   if (subs.length) p.set("subs", JSON.stringify(subs));
   p.set("key", progressKey || String(filePath));
@@ -125,7 +137,7 @@ export function openLocalPlayer({ filePath, seconds = 0, subtitlePaths = [], tit
   });
   root.appendChild(frame);
   document.body.appendChild(root);
-  current = { root, frame, media, progressKey, durKey, lastT: null };
+  current = { root, frame, media, progressKey, durKey, lastT: null, filePath, title };
   window.addEventListener("message", onMessage);
   window.addEventListener("keydown", onKey, true);
 }

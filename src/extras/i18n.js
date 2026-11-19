@@ -1,0 +1,443 @@
+// App languages. Follows the phone / computer language unless one is picked
+// in Settings. Works as a light translation layer over the rendered UI: text
+// nodes and placeholder / title / aria-label attributes that exactly match an
+// English string are swapped for the translation (a few patterns handle
+// numbers and names). Movie and show titles, overviews and other TMDB data
+// are not touched; their language comes from the TMDB metadata language.
+
+export const LANGUAGES = [
+  { code: "en", name: "English", tmdb: "en-US" },
+  { code: "de", name: "Deutsch", tmdb: "de-DE" },
+  { code: "es", name: "Español", tmdb: "es-ES" },
+  { code: "fr", name: "Français", tmdb: "fr-FR" },
+  { code: "it", name: "Italiano", tmdb: "it-IT" },
+  { code: "pt", name: "Português", tmdb: "pt-BR" },
+];
+const ORDER = ["de", "es", "fr", "it", "pt"];
+const SETTING = "streambert_appLanguage"; // "system" | code
+
+// [English, Deutsch, Español, Français, Italiano, Português]
+const T = [
+  // navigation
+  ["Home", "Start", "Inicio", "Accueil", "Home", "Início"],
+  ["Search", "Suche", "Buscar", "Recherche", "Cerca", "Buscar"],
+  ["Library", "Mediathek", "Biblioteca", "Bibliothèque", "Libreria", "Biblioteca"],
+  ["Downloads", "Downloads", "Descargas", "Téléchargements", "Download", "Downloads"],
+  ["Settings", "Einstellungen", "Ajustes", "Paramètres", "Impostazioni", "Configurações"],
+  ["Library & History", "Mediathek & Verlauf", "Biblioteca e historial", "Bibliothèque et historique", "Libreria e cronologia", "Biblioteca e histórico"],
+  ["Back", "Zurück", "Atrás", "Retour", "Indietro", "Voltar"],
+  ["‹ Back", "‹ Zurück", "‹ Atrás", "‹ Retour", "‹ Indietro", "‹ Voltar"],
+  ["Close", "Schließen", "Cerrar", "Fermer", "Chiudi", "Fechar"],
+  ["Cancel", "Abbrechen", "Cancelar", "Annuler", "Annulla", "Cancelar"],
+  ["Save", "Speichern", "Guardar", "Enregistrer", "Salva", "Salvar"],
+  ["Delete", "Löschen", "Eliminar", "Supprimer", "Elimina", "Excluir"],
+  ["Remove", "Entfernen", "Quitar", "Retirer", "Rimuovi", "Remover"],
+  ["Rename", "Umbenennen", "Renombrar", "Renommer", "Rinomina", "Renomear"],
+  ["Create", "Erstellen", "Crear", "Créer", "Crea", "Criar"],
+  ["Done", "Fertig", "Listo", "Terminé", "Fatto", "Pronto"],
+  ["Retry", "Erneut versuchen", "Reintentar", "Réessayer", "Riprova", "Tentar de novo"],
+  ["Try again", "Erneut versuchen", "Reintentar", "Réessayer", "Riprova", "Tentar de novo"],
+  ["Try Again", "Erneut versuchen", "Reintentar", "Réessayer", "Riprova", "Tentar de novo"],
+  ["Refresh", "Aktualisieren", "Actualizar", "Actualiser", "Aggiorna", "Atualizar"],
+  ["Checking…", "Wird geprüft…", "Comprobando…", "Vérification…", "Verifica…", "Verificando…"],
+  ["Change", "Ändern", "Cambiar", "Modifier", "Cambia", "Alterar"],
+  ["Switch", "Wechseln", "Cambiar", "Changer", "Cambia", "Trocar"],
+  ["Confirm", "Bestätigen", "Confirmar", "Confirmer", "Conferma", "Confirmar"],
+  ["Dismiss", "Ausblenden", "Descartar", "Ignorer", "Ignora", "Dispensar"],
+  ["More", "Mehr", "Más", "Plus", "Altro", "Mais"],
+  ["Next", "Weiter", "Siguiente", "Suivant", "Avanti", "Próximo"],
+  ["Previous", "Zurück", "Anterior", "Précédent", "Precedente", "Anterior"],
+  ["Off", "Aus", "No", "Désactivé", "Off", "Desligado"],
+  ["Skip for now", "Vorerst überspringen", "Omitir por ahora", "Plus tard", "Salta per ora", "Pular por enquanto"],
+  ["Let's go", "Los geht's", "Vamos", "C'est parti", "Iniziamo", "Vamos lá"],
+  // home
+  ["Continue Watching", "Weiterschauen", "Seguir viendo", "Reprendre", "Continua a guardare", "Continuar assistindo"],
+  ["Recommended for You", "Für dich empfohlen", "Recomendado para ti", "Recommandé pour vous", "Consigliati per te", "Recomendado para você"],
+  ["Trending Movies", "Angesagte Filme", "Películas en tendencia", "Films tendance", "Film di tendenza", "Filmes em alta"],
+  ["Trending Series", "Angesagte Serien", "Series en tendencia", "Séries tendance", "Serie di tendenza", "Séries em alta"],
+  ["Top Rated", "Bestbewertet", "Mejor valoradas", "Les mieux notés", "Più votati", "Mais bem avaliados"],
+  ["Coming up", "Demnächst", "Próximamente", "À venir", "In arrivo", "Em breve"],
+  ["Calendar ›", "Kalender ›", "Calendario ›", "Calendrier ›", "Calendario ›", "Calendário ›"],
+  ["Watch Now", "Jetzt ansehen", "Ver ahora", "Regarder", "Guarda ora", "Assistir agora"],
+  ["More Info", "Mehr Infos", "Más info", "Plus d'infos", "Più info", "Mais info"],
+  ["No internet connection", "Keine Internetverbindung", "Sin conexión a internet", "Pas de connexion Internet", "Nessuna connessione Internet", "Sem conexão com a internet"],
+  ["Today", "Heute", "Hoy", "Aujourd'hui", "Oggi", "Hoje"],
+  ["Tomorrow", "Morgen", "Mañana", "Demain", "Domani", "Amanhã"],
+  ["Movie release", "Filmstart", "Estreno", "Sortie du film", "Uscita del film", "Estreia"],
+  // detail pages
+  ["Play", "Abspielen", "Reproducir", "Lecture", "Riproduci", "Reproduzir"],
+  ["Play Now", "Jetzt abspielen", "Reproducir", "Lire maintenant", "Riproduci ora", "Reproduzir agora"],
+  ["Trailer", "Trailer", "Tráiler", "Bande-annonce", "Trailer", "Trailer"],
+  ["Cast", "Besetzung", "Reparto", "Distribution", "Cast", "Elenco"],
+  ["Cast to TV", "Auf TV streamen", "Enviar a la TV", "Caster sur la TV", "Trasmetti alla TV", "Transmitir para a TV"],
+  ["Saved", "Gemerkt", "Guardado", "Enregistré", "Salvato", "Salvo"],
+  ["Watched", "Gesehen", "Visto", "Vu", "Visto", "Assistido"],
+  ["✓ Mark Watched", "✓ Als gesehen markieren", "✓ Marcar como visto", "✓ Marquer comme vu", "✓ Segna come visto", "✓ Marcar como assistido"],
+  ["Mark as Watched", "Als gesehen markieren", "Marcar como visto", "Marquer comme vu", "Segna come visto", "Marcar como assistido"],
+  ["Mark as Unwatched", "Als ungesehen markieren", "Marcar como no visto", "Marquer comme non vu", "Segna come non visto", "Marcar como não assistido"],
+  ["Episodes", "Folgen", "Episodios", "Épisodes", "Episodi", "Episódios"],
+  ["Movie", "Film", "Película", "Film", "Film", "Filme"],
+  ["Series", "Serie", "Serie", "Série", "Serie", "Série"],
+  ["Directors", "Regie", "Dirección", "Réalisation", "Regia", "Direção"],
+  ["Writers", "Drehbuch", "Guion", "Scénario", "Sceneggiatura", "Roteiro"],
+  ["Creators", "Idee", "Creadores", "Créateurs", "Ideatori", "Criadores"],
+  ["Up Next", "Als Nächstes", "A continuación", "À suivre", "Prossimo", "A seguir"],
+  ["Unreleased", "Noch nicht erschienen", "Sin estrenar", "Pas encore sorti", "Non ancora uscito", "Não lançado"],
+  ["This movie has not been released yet", "Dieser Film ist noch nicht erschienen", "Esta película aún no se ha estrenado", "Ce film n'est pas encore sorti", "Questo film non è ancora uscito", "Este filme ainda não foi lançado"],
+  ["Change source", "Quelle wechseln", "Cambiar fuente", "Changer de source", "Cambia fonte", "Trocar fonte"],
+  ["Download", "Herunterladen", "Descargar", "Télécharger", "Scarica", "Baixar"],
+  ["Add to list", "Zu Liste hinzufügen", "Añadir a lista", "Ajouter à une liste", "Aggiungi a lista", "Adicionar à lista"],
+  ["Rate", "Bewerten", "Valorar", "Noter", "Valuta", "Avaliar"],
+  ["Tap a star", "Tippe auf einen Stern", "Toca una estrella", "Touchez une étoile", "Tocca una stella", "Toque numa estrela"],
+  ["Didn't like it", "Hat mir nicht gefallen", "No me gustó", "Pas aimé", "Non mi è piaciuto", "Não gostei"],
+  ["It was OK", "War okay", "Estuvo bien", "C'était correct", "Era ok", "Foi ok"],
+  ["Liked it", "Gefallen", "Me gustó", "Aimé", "Mi è piaciuto", "Gostei"],
+  ["Really liked it", "Sehr gefallen", "Me gustó mucho", "Beaucoup aimé", "Mi è piaciuto molto", "Gostei muito"],
+  ["Loved it", "Geliebt", "Me encantó", "Adoré", "Adorato", "Amei"],
+  ["Remove my rating", "Meine Bewertung entfernen", "Quitar mi valoración", "Retirer ma note", "Rimuovi il mio voto", "Remover minha avaliação"],
+  ["No lists yet. Make your first one below.", "Noch keine Listen. Erstelle unten deine erste.", "Aún no hay listas. Crea la primera abajo.", "Pas encore de liste. Créez la première ci-dessous.", "Nessuna lista. Crea la prima qui sotto.", "Nenhuma lista ainda. Crie a primeira abaixo."],
+  ["New list name (e.g. Halloween)", "Name der neuen Liste (z. B. Halloween)", "Nombre de la lista (p. ej. Halloween)", "Nom de la liste (ex. Halloween)", "Nome della lista (es. Halloween)", "Nome da lista (ex.: Halloween)"],
+  ["List name", "Listenname", "Nombre de la lista", "Nom de la liste", "Nome della lista", "Nome da lista"],
+  ["New list", "Neue Liste", "Nueva lista", "Nouvelle liste", "Nuova lista", "Nova lista"],
+  ["Rename list", "Liste umbenennen", "Renombrar lista", "Renommer la liste", "Rinomina lista", "Renomear lista"],
+  ["Delete list", "Liste löschen", "Eliminar lista", "Supprimer la liste", "Elimina lista", "Excluir lista"],
+  ["Remove from list", "Aus Liste entfernen", "Quitar de la lista", "Retirer de la liste", "Rimuovi dalla lista", "Remover da lista"],
+  ["The titles stay in your library; only the list goes away.", "Die Titel bleiben in deiner Mediathek, nur die Liste wird gelöscht.", "Los títulos se quedan en tu biblioteca; solo se borra la lista.", "Les titres restent dans votre bibliothèque ; seule la liste disparaît.", "I titoli restano in libreria; viene eliminata solo la lista.", "Os títulos ficam na biblioteca; só a lista é apagada."],
+  // library
+  ["My Library", "Meine Mediathek", "Mi biblioteca", "Ma bibliothèque", "La mia libreria", "Minha biblioteca"],
+  ["Watch history, progress, and saved titles", "Verlauf, Fortschritt und gemerkte Titel", "Historial, progreso y títulos guardados", "Historique, progression et titres enregistrés", "Cronologia, progressi e titoli salvati", "Histórico, progresso e títulos salvos"],
+  ["Watch History", "Verlauf", "Historial", "Historique", "Cronologia", "Histórico"],
+  ["My Lists", "Meine Listen", "Mis listas", "Mes listes", "Le mie liste", "Minhas listas"],
+  ["+ New list", "+ Neue Liste", "+ Nueva lista", "+ Nouvelle liste", "+ Nuova lista", "+ Nova lista"],
+  ["Watch Stats", "Statistik", "Estadísticas", "Statistiques", "Statistiche", "Estatísticas"],
+  ["See all ›", "Alle ansehen ›", "Ver todo ›", "Tout voir ›", "Vedi tutto ›", "Ver tudo ›"],
+  ["last 7 days", "letzte 7 Tage", "últimos 7 días", "7 derniers jours", "ultimi 7 giorni", "últimos 7 dias"],
+  ["day streak", "Tage in Folge", "días seguidos", "jours d'affilée", "giorni di fila", "dias seguidos"],
+  ["all time", "insgesamt", "en total", "au total", "in totale", "no total"],
+  ["Most watched", "Am meisten gesehen", "Lo más visto", "Le plus regardé", "Il più visto", "Mais assistido"],
+  ["longest streak (days)", "längste Serie (Tage)", "racha más larga (días)", "plus longue série (jours)", "serie più lunga (giorni)", "maior sequência (dias)"],
+  ["biggest day", "stärkster Tag", "día récord", "plus grosse journée", "giorno record", "maior dia"],
+  ["busiest month", "aktivster Monat", "mes más activo", "mois le plus chargé", "mese più attivo", "mês mais ativo"],
+  ["By month", "Nach Monat", "Por mes", "Par mois", "Per mese", "Por mês"],
+  ["Top genres", "Top-Genres", "Géneros principales", "Genres préférés", "Generi preferiti", "Gêneros favoritos"],
+  ["Top titles", "Top-Titel", "Títulos principales", "Titres préférés", "Titoli preferiti", "Títulos favoritos"],
+  ["Nothing here yet", "Hier ist noch nichts", "Aún no hay nada", "Rien pour l'instant", "Ancora niente", "Nada por aqui ainda"],
+  ["Start watching a movie or series and your history will appear here.", "Schau einen Film oder eine Serie, dann erscheint hier dein Verlauf.", "Empieza a ver una película o serie y tu historial aparecerá aquí.", "Commencez un film ou une série et votre historique apparaîtra ici.", "Inizia a guardare un film o una serie e la cronologia apparirà qui.", "Comece a assistir um filme ou série e seu histórico aparecerá aqui."],
+  ["Remove from history", "Aus Verlauf entfernen", "Quitar del historial", "Retirer de l'historique", "Rimuovi dalla cronologia", "Remover do histórico"],
+  ["Custom order", "Eigene Reihenfolge", "Orden personalizado", "Ordre personnalisé", "Ordine personalizzato", "Ordem personalizada"],
+  ["A-Z", "A–Z", "A-Z", "A-Z", "A-Z", "A-Z"],
+  ["Top rated", "Bestbewertet", "Mejor valoradas", "Mieux notés", "Più votati", "Mais bem avaliados"],
+  ["Newest first", "Neueste zuerst", "Más recientes primero", "Plus récents d'abord", "Più recenti prima", "Mais recentes primeiro"],
+  ["My rating", "Meine Bewertung", "Mi valoración", "Ma note", "Il mio voto", "Minha avaliação"],
+  ["Title A-Z", "Titel A–Z", "Título A-Z", "Titre A-Z", "Titolo A-Z", "Título A-Z"],
+  // downloads
+  ["Active", "Aktiv", "Activas", "En cours", "Attivi", "Ativos"],
+  ["Paused", "Pausiert", "En pausa", "En pause", "In pausa", "Pausado"],
+  ["Failed", "Fehlgeschlagen", "Error", "Échec", "Non riuscito", "Falhou"],
+  ["Completed", "Fertig", "Completada", "Terminé", "Completato", "Concluído"],
+  ["Watch", "Ansehen", "Ver", "Regarder", "Guarda", "Assistir"],
+  ["Resume", "Fortsetzen", "Reanudar", "Reprendre", "Riprendi", "Retomar"],
+  ["Pause", "Pause", "Pausa", "Pause", "Pausa", "Pausar"],
+  ["Not started", "Nicht begonnen", "Sin empezar", "Pas commencé", "Non iniziato", "Não iniciado"],
+  ["No downloads yet", "Noch keine Downloads", "Aún no hay descargas", "Aucun téléchargement", "Nessun download", "Nenhum download ainda"],
+  ["Local Files", "Lokale Dateien", "Archivos locales", "Fichiers locaux", "File locali", "Arquivos locais"],
+  ["Show in folder", "Im Ordner zeigen", "Mostrar en carpeta", "Afficher dans le dossier", "Mostra nella cartella", "Mostrar na pasta"],
+  ["Filter downloads…", "Downloads filtern…", "Filtrar descargas…", "Filtrer les téléchargements…", "Filtra download…", "Filtrar downloads…"],
+  ["Sort by", "Sortieren nach", "Ordenar por", "Trier par", "Ordina per", "Ordenar por"],
+  ["Date", "Datum", "Fecha", "Date", "Data", "Data"],
+  ["Name", "Name", "Nombre", "Nom", "Nome", "Nome"],
+  ["Size", "Größe", "Tamaño", "Taille", "Dimensione", "Tamanho"],
+  ["Type", "Typ", "Tipo", "Type", "Tipo", "Tipo"],
+  ["Download complete", "Download fertig", "Descarga completada", "Téléchargement terminé", "Download completato", "Download concluído"],
+  ["Downloaded subtitles", "Heruntergeladene Untertitel", "Subtítulos descargados", "Sous-titres téléchargés", "Sottotitoli scaricati", "Legendas baixadas"],
+  ["No subtitles", "Keine Untertitel", "Sin subtítulos", "Pas de sous-titres", "Nessun sottotitolo", "Sem legendas"],
+  ["Stop", "Stopp", "Detener", "Arrêter", "Ferma", "Parar"],
+  // search
+  ["Search movies and series...", "Filme und Serien suchen …", "Buscar películas y series...", "Rechercher des films et séries...", "Cerca film e serie...", "Buscar filmes e séries..."],
+  ["Recent searches", "Letzte Suchen", "Búsquedas recientes", "Recherches récentes", "Ricerche recenti", "Buscas recentes"],
+  ["Search for movies and series", "Nach Filmen und Serien suchen", "Busca películas y series", "Recherchez des films et séries", "Cerca film e serie", "Busque filmes e séries"],
+  ["Search by voice", "Sprachsuche", "Buscar por voz", "Recherche vocale", "Ricerca vocale", "Buscar por voz"],
+  ["Voice input isn't available on this device.", "Spracheingabe ist auf diesem Gerät nicht verfügbar.", "La entrada de voz no está disponible en este dispositivo.", "La saisie vocale n'est pas disponible sur cet appareil.", "L'input vocale non è disponibile su questo dispositivo.", "A entrada de voz não está disponível neste aparelho."],
+  ["Clear", "Leeren", "Borrar", "Effacer", "Cancella", "Limpar"],
+  ["Clear all", "Alle löschen", "Borrar todo", "Tout effacer", "Cancella tutto", "Limpar tudo"],
+  // player / subtitles
+  ["Subtitles", "Untertitel", "Subtítulos", "Sous-titres", "Sottotitoli", "Legendas"],
+  ["Subtitle style", "Untertitel-Stil", "Estilo de subtítulos", "Style des sous-titres", "Stile sottotitoli", "Estilo das legendas"],
+  ["Timing", "Timing", "Sincronización", "Synchronisation", "Sincronizzazione", "Sincronia"],
+  ["Small", "Klein", "Pequeño", "Petit", "Piccolo", "Pequeno"],
+  ["Medium", "Mittel", "Mediano", "Moyen", "Medio", "Médio"],
+  ["Large", "Groß", "Grande", "Grand", "Grande", "Grande"],
+  ["Extra large", "Sehr groß", "Muy grande", "Très grand", "Molto grande", "Muito grande"],
+  ["White", "Weiß", "Blanco", "Blanc", "Bianco", "Branco"],
+  ["Yellow", "Gelb", "Amarillo", "Jaune", "Giallo", "Amarelo"],
+  ["Cyan", "Cyan", "Cian", "Cyan", "Ciano", "Ciano"],
+  ["Green", "Grün", "Verde", "Vert", "Verde", "Verde"],
+  ["Dark box", "Dunkler Kasten", "Caja oscura", "Fond sombre", "Riquadro scuro", "Caixa escura"],
+  ["Black box", "Schwarzer Kasten", "Caja negra", "Fond noir", "Riquadro nero", "Caixa preta"],
+  ["Outline", "Umriss", "Contorno", "Contour", "Contorno", "Contorno"],
+  ["Bottom", "Unten", "Abajo", "En bas", "In basso", "Embaixo"],
+  ["Higher", "Höher", "Más arriba", "Plus haut", "Più in alto", "Mais alto"],
+  ["Top", "Oben", "Arriba", "En haut", "In alto", "Em cima"],
+  ["Color", "Farbe", "Color", "Couleur", "Colore", "Cor"],
+  ["Background", "Hintergrund", "Fondo", "Fond", "Sfondo", "Fundo"],
+  ["Position", "Position", "Posición", "Position", "Posizione", "Posição"],
+  ["Reset", "Zurücksetzen", "Restablecer", "Réinitialiser", "Reimposta", "Redefinir"],
+  ["Reset to default", "Auf Standard zurücksetzen", "Restablecer", "Valeurs par défaut", "Ripristina predefiniti", "Restaurar padrão"],
+  ["This is how subtitles look", "So sehen Untertitel aus", "Así se ven los subtítulos", "Voici l'apparence des sous-titres", "Ecco come appaiono i sottotitoli", "É assim que as legendas ficam"],
+  // settings (groups and common rows)
+  ["SETTINGS", "EINSTELLUNGEN", "AJUSTES", "PARAMÈTRES", "IMPOSTAZIONI", "CONFIGURAÇÕES"],
+  ["Search settings…", "Einstellungen durchsuchen …", "Buscar ajustes…", "Rechercher un paramètre…", "Cerca impostazioni…", "Buscar configurações…"],
+  ["Jump to Section", "Zum Bereich springen", "Ir a la sección", "Aller à la section", "Vai alla sezione", "Ir para a seção"],
+  ["General", "Allgemein", "General", "Général", "Generale", "Geral"],
+  ["Updates & API", "Updates & API", "Actualizaciones y API", "Mises à jour et API", "Aggiornamenti e API", "Atualizações e API"],
+  ["Content", "Inhalte", "Contenido", "Contenu", "Contenuti", "Conteúdo"],
+  ["Playback", "Wiedergabe", "Reproducción", "Lecture", "Riproduzione", "Reprodução"],
+  ["Interface", "Oberfläche", "Interfaz", "Interface", "Interfaccia", "Interface"],
+  ["Appearance", "Darstellung", "Apariencia", "Apparence", "Aspetto", "Aparência"],
+  ["Theme", "Design", "Tema", "Thème", "Tema", "Tema"],
+  ["Notifications", "Benachrichtigungen", "Notificaciones", "Notifications", "Notifiche", "Notificações"],
+  ["Storage & Data", "Speicher & Daten", "Almacenamiento y datos", "Stockage et données", "Archiviazione e dati", "Armazenamento e dados"],
+  ["Backup & Restore", "Sichern & Wiederherstellen", "Copia de seguridad", "Sauvegarde et restauration", "Backup e ripristino", "Backup e restauração"],
+  ["Library & Privacy", "Mediathek & Privatsphäre", "Biblioteca y privacidad", "Bibliothèque et confidentialité", "Libreria e privacy", "Biblioteca e privacidade"],
+  ["Profiles", "Profile", "Perfiles", "Profils", "Profili", "Perfis"],
+  ["Profiles & Privacy", "Profile & Privatsphäre", "Perfiles y privacidad", "Profils et confidentialité", "Profili e privacy", "Perfis e privacidade"],
+  ["Cloud sync", "Cloud-Sync", "Sincronización en la nube", "Synchronisation cloud", "Sincronizzazione cloud", "Sincronização na nuvem"],
+  ["Sync now", "Jetzt synchronisieren", "Sincronizar ahora", "Synchroniser", "Sincronizza ora", "Sincronizar agora"],
+  ["Sync automatically", "Automatisch synchronisieren", "Sincronizar automáticamente", "Synchroniser automatiquement", "Sincronizza automaticamente", "Sincronizar automaticamente"],
+  ["Disconnect", "Trennen", "Desconectar", "Déconnecter", "Disconnetti", "Desconectar"],
+  ["App lock", "App-Sperre", "Bloqueo de la app", "Verrouillage", "Blocco app", "Bloqueio do app"],
+  ["Lock Streambert", "Streambert sperren", "Bloquear Streambert", "Verrouiller Streambert", "Blocca Streambert", "Bloquear o Streambert"],
+  ["Immediately", "Sofort", "Inmediatamente", "Immédiatement", "Subito", "Imediatamente"],
+  ["After 1 minute", "Nach 1 Minute", "Tras 1 minuto", "Après 1 minute", "Dopo 1 minuto", "Após 1 minuto"],
+  ["After 5 minutes", "Nach 5 Minuten", "Tras 5 minutos", "Après 5 minutes", "Dopo 5 minuti", "Após 5 minutos"],
+  ["After 15 minutes", "Nach 15 Minuten", "Tras 15 minutos", "Après 15 minutes", "Dopo 15 minuti", "Após 15 minutos"],
+  ["Ask who's watching", "Fragen, wer schaut", "Preguntar quién ve", "Demander qui regarde", "Chiedi chi guarda", "Perguntar quem está assistindo"],
+  ["Home-screen widget", "Startbildschirm-Widget", "Widget de inicio", "Widget d'écran d'accueil", "Widget della schermata Home", "Widget da tela inicial"],
+  ["Add widget to home screen", "Widget zum Startbildschirm hinzufügen", "Añadir widget al inicio", "Ajouter le widget", "Aggiungi widget alla Home", "Adicionar widget à tela inicial"],
+  ["Save downloads to", "Downloads speichern in", "Guardar descargas en", "Enregistrer les téléchargements dans", "Salva i download in", "Salvar downloads em"],
+  ["App storage", "App-Speicher", "Almacenamiento de la app", "Stockage de l'app", "Memoria dell'app", "Armazenamento do app"],
+  ["Movies folder", "Filme-Ordner", "Carpeta Películas", "Dossier Films", "Cartella Film", "Pasta Filmes"],
+  ["Choose folder…", "Ordner wählen …", "Elegir carpeta…", "Choisir un dossier…", "Scegli cartella…", "Escolher pasta…"],
+  ["Download options", "Download-Optionen", "Opciones de descarga", "Options de téléchargement", "Opzioni di download", "Opções de download"],
+  ["Download on Wi-Fi only", "Nur über WLAN herunterladen", "Descargar solo con Wi-Fi", "Télécharger en Wi-Fi uniquement", "Scarica solo con Wi-Fi", "Baixar só no Wi-Fi"],
+  ["Save as MP4", "Als MP4 speichern", "Guardar como MP4", "Enregistrer en MP4", "Salva come MP4", "Salvar como MP4"],
+  ["Smart downloads", "Intelligente Downloads", "Descargas inteligentes", "Téléchargements intelligents", "Download intelligenti", "Downloads inteligentes"],
+  ["Storage limit", "Speicherlimit", "Límite de almacenamiento", "Limite de stockage", "Limite di spazio", "Limite de armazenamento"],
+  ["Next 1", "Nächste 1", "Siguiente 1", "Suivant 1", "Prossimo 1", "Próximo 1"],
+  ["Next 2", "Nächste 2", "Siguientes 2", "2 suivants", "Prossimi 2", "Próximos 2"],
+  ["Next 3", "Nächste 3", "Siguientes 3", "3 suivants", "Prossimi 3", "Próximos 3"],
+  ["No limit", "Kein Limit", "Sin límite", "Sans limite", "Nessun limite", "Sem limite"],
+  ["When you finish an episode, download the next ones of that show automatically. Only on Wi-Fi, using the source you watch with.", "Wenn du eine Folge zu Ende schaust, werden die nächsten automatisch heruntergeladen. Nur über WLAN, mit der Quelle, mit der du schaust.", "Al terminar un episodio, se descargan automáticamente los siguientes de esa serie. Solo con Wi-Fi y con la fuente que usas.", "Quand vous finissez un épisode, les suivants de la série sont téléchargés automatiquement. En Wi-Fi uniquement, avec la source que vous utilisez.", "Quando finisci un episodio, i successivi della serie vengono scaricati in automatico. Solo con Wi-Fi, con la fonte che usi.", "Ao terminar um episódio, os próximos da série são baixados automaticamente. Só no Wi-Fi, com a fonte que você usa."],
+  ["Downloads wait (and continue automatically) when you're on mobile data.", "Downloads warten bei mobilen Daten und laufen dann automatisch weiter.", "Las descargas esperan (y siguen solas) cuando usas datos móviles.", "Les téléchargements attendent (et reprennent seuls) sur les données mobiles.", "Con i dati mobili i download aspettano (e riprendono da soli).", "Os downloads esperam (e continuam sozinhos) quando você está nos dados móveis."],
+  ["Private to Streambert. Removed if you uninstall the app.", "Nur für Streambert. Wird beim Deinstallieren gelöscht.", "Privado para Streambert. Se borra al desinstalar la app.", "Réservé à Streambert. Supprimé si vous désinstallez l'app.", "Privato per Streambert. Viene eliminato disinstallando l'app.", "Privado do Streambert. Removido se você desinstalar o app."],
+  ["Any folder, including an SD card.", "Jeder Ordner, auch auf einer SD-Karte.", "Cualquier carpeta, incluso en una tarjeta SD.", "N'importe quel dossier, carte SD comprise.", "Qualsiasi cartella, anche su scheda SD.", "Qualquer pasta, inclusive no cartão SD."],
+  ["Language of Streambert's menus and buttons. Movie and show info uses the metadata language below.", "Sprache der Menüs und Schaltflächen. Infos zu Filmen und Serien nutzen die Inhaltssprache darunter.", "Idioma de los menús y botones. La información de películas y series usa el idioma de los datos de abajo.", "Langue des menus et des boutons. Les fiches des films et séries utilisent la langue des fiches ci-dessous.", "Lingua di menu e pulsanti. Le informazioni su film e serie usano la lingua dei contenuti qui sotto.", "Idioma dos menus e botões. As informações de filmes e séries usam o idioma dos dados abaixo."],
+  ["Auto-download", "Auto-Download", "Descarga automática", "Téléchargement auto", "Download automatico", "Download automático"],
+  ["Profiles & Sync", "Profile & Sync", "Perfiles y sincronización", "Profils et synchronisation", "Profili e sincronizzazione", "Perfis e sincronização"],
+  ["Downloaded videos", "Heruntergeladene Videos", "Vídeos descargados", "Vidéos téléchargées", "Video scaricati", "Vídeos baixados"],
+  ["Play downloads in Streambert", "Downloads in Streambert abspielen", "Reproducir descargas en Streambert", "Lire les téléchargements dans Streambert", "Riproduci i download in Streambert", "Reproduzir downloads no Streambert"],
+  ["Download Folder", "Download-Ordner", "Carpeta de descargas", "Dossier de téléchargement", "Cartella download", "Pasta de downloads"],
+  ["Set Download Folder", "Download-Ordner festlegen", "Elegir carpeta de descargas", "Choisir le dossier", "Imposta cartella download", "Definir pasta de downloads"],
+  ["Browse", "Durchsuchen", "Examinar", "Parcourir", "Sfoglia", "Procurar"],
+  ["Browse…", "Durchsuchen …", "Examinar…", "Parcourir…", "Sfoglia…", "Procurar…"],
+  ["Quit App", "Beenden", "Salir", "Quitter", "Esci", "Sair"],
+  ["Minimize", "Minimieren", "Minimizar", "Réduire", "Riduci a icona", "Minimizar"],
+  ["Help & Shortcuts (?)", "Hilfe & Tastenkürzel (?)", "Ayuda y atajos (?)", "Aide et raccourcis (?)", "Aiuto e scorciatoie (?)", "Ajuda e atalhos (?)"],
+  ["KEYBOARD SHORTCUTS", "TASTENKÜRZEL", "ATAJOS DE TECLADO", "RACCOURCIS CLAVIER", "SCORCIATOIE DA TASTIERA", "ATALHOS DE TECLADO"],
+  ["Desktop Notifications", "Desktop-Benachrichtigungen", "Notificaciones de escritorio", "Notifications du bureau", "Notifiche desktop", "Notificações da área de trabalho"],
+  ["Discord Rich Presence", "Discord Rich Presence", "Discord Rich Presence", "Discord Rich Presence", "Discord Rich Presence", "Discord Rich Presence"],
+  ["Play this stream in mpv or VLC", "Diesen Stream in mpv oder VLC abspielen", "Reproducir en mpv o VLC", "Lire ce flux dans mpv ou VLC", "Riproduci in mpv o VLC", "Reproduzir no mpv ou VLC"],
+  ["Subtitle style & timing", "Untertitel-Stil & Timing", "Estilo y sincronía de subtítulos", "Style et synchro des sous-titres", "Stile e sincronia sottotitoli", "Estilo e sincronia das legendas"],
+  ["Pop out player", "Player abdocken", "Separar reproductor", "Détacher le lecteur", "Stacca il player", "Destacar player"],
+  ["App lock", "App-Sperre", "Bloqueo de la app", "Verrouillage", "Blocco app", "Bloqueio do app"],
+  ["Enter your PIN", "PIN eingeben", "Introduce tu PIN", "Saisissez votre code", "Inserisci il PIN", "Digite seu PIN"],
+  ["Wrong PIN", "Falsche PIN", "PIN incorrecto", "Code incorrect", "PIN errato", "PIN incorreto"],
+  ["Unlock", "Entsperren", "Desbloquear", "Déverrouiller", "Sblocca", "Desbloquear"],
+  ["App language", "App-Sprache", "Idioma de la app", "Langue de l'app", "Lingua dell'app", "Idioma do app"],
+  ["Phone language", "Sprache des Telefons", "Idioma del teléfono", "Langue du téléphone", "Lingua del telefono", "Idioma do telefone"],
+  ["System language", "Systemsprache", "Idioma del sistema", "Langue du système", "Lingua di sistema", "Idioma do sistema"],
+  ["Metadata Language", "Sprache der Inhalte", "Idioma de los datos", "Langue des fiches", "Lingua dei contenuti", "Idioma dos dados"],
+  ["Start Page", "Startseite", "Página de inicio", "Page de démarrage", "Pagina iniziale", "Página inicial"],
+  ["Home Page Layout", "Startseiten-Aufbau", "Diseño de inicio", "Mise en page de l'accueil", "Layout della Home", "Layout do início"],
+  ["Save Layout", "Aufbau speichern", "Guardar diseño", "Enregistrer la mise en page", "Salva layout", "Salvar layout"],
+  ["Reset to defaults", "Standard wiederherstellen", "Restablecer valores", "Valeurs par défaut", "Ripristina predefiniti", "Restaurar padrões"],
+  ["Watchlist sort order", "Sortierung der Merkliste", "Orden de la lista", "Tri de la liste", "Ordine della lista", "Ordem da lista"],
+  ["Record watch history", "Verlauf speichern", "Guardar historial", "Enregistrer l'historique", "Salva cronologia", "Salvar histórico"],
+  ["Autoplay Next Episode", "Nächste Folge automatisch abspielen", "Reproducir siguiente episodio", "Lecture auto de l'épisode suivant", "Riproduci episodio successivo", "Reproduzir próximo episódio"],
+  ["Enable Autoplay Next", "Autoplay aktivieren", "Activar reproducción automática", "Activer la lecture auto", "Attiva riproduzione automatica", "Ativar reprodução automática"],
+  ["Countdown Duration", "Countdown-Dauer", "Duración de la cuenta atrás", "Durée du compte à rebours", "Durata del conto alla rovescia", "Duração da contagem"],
+  ["Anime Intro Skip", "Anime-Intro überspringen", "Saltar intro de anime", "Passer l'intro des animés", "Salta intro anime", "Pular abertura de anime"],
+  ["Auto Skip", "Automatisch überspringen", "Saltar automáticamente", "Passer automatiquement", "Salta automaticamente", "Pular automaticamente"],
+  ["Manual Skip", "Manuell überspringen", "Saltar manualmente", "Passer manuellement", "Salta manualmente", "Pular manualmente"],
+  ["Skip", "Überspringen", "Saltar", "Passer", "Salta", "Pular"],
+  ["Auto-Watched Threshold", "Ab wann als gesehen gilt", "Umbral de visto", "Seuil « vu »", "Soglia di visto", "Limite para assistido"],
+  ["Maximum Allowed Age Rating", "Höchste erlaubte Altersfreigabe", "Clasificación máxima permitida", "Classification maximale autorisée", "Classificazione massima consentita", "Classificação máxima permitida"],
+  ["No restriction", "Keine Einschränkung", "Sin restricción", "Aucune restriction", "Nessuna restrizione", "Sem restrição"],
+  ["Rating Country", "Land der Altersfreigabe", "País de clasificación", "Pays de classification", "Paese di classificazione", "País da classificação"],
+  ["Age Rating", "Altersfreigabe", "Clasificación por edad", "Classification", "Classificazione", "Classificação"],
+  ["Reduce animations", "Animationen reduzieren", "Reducir animaciones", "Réduire les animations", "Riduci animazioni", "Reduzir animações"],
+  ["Accent Colour", "Akzentfarbe", "Color de acento", "Couleur d'accent", "Colore principale", "Cor de destaque"],
+  ["Font Size", "Schriftgröße", "Tamaño de letra", "Taille du texte", "Dimensione testo", "Tamanho da fonte"],
+  ["Normal", "Normal", "Normal", "Normal", "Normale", "Normal"],
+  ["Carousel", "Karussell", "Carrusel", "Carrousel", "Carosello", "Carrossel"],
+  ["Row display style", "Darstellung der Reihen", "Estilo de las filas", "Style des rangées", "Stile delle righe", "Estilo das linhas"],
+  ["App Version", "App-Version", "Versión de la app", "Version de l'app", "Versione app", "Versão do app"],
+  ["Current version", "Aktuelle Version", "Versión actual", "Version actuelle", "Versione attuale", "Versão atual"],
+  ["Check for updates on startup", "Beim Start nach Updates suchen", "Buscar actualizaciones al iniciar", "Vérifier les mises à jour au démarrage", "Cerca aggiornamenti all'avvio", "Procurar atualizações ao iniciar"],
+  ["UPDATE AVAILABLE", "UPDATE VERFÜGBAR", "ACTUALIZACIÓN DISPONIBLE", "MISE À JOUR DISPONIBLE", "AGGIORNAMENTO DISPONIBILE", "ATUALIZAÇÃO DISPONÍVEL"],
+  ["Install Update", "Update installieren", "Instalar actualización", "Installer la mise à jour", "Installa aggiornamento", "Instalar atualização"],
+  ["What's New", "Neuigkeiten", "Novedades", "Nouveautés", "Novità", "Novidades"],
+  ["TMDB Read Access Token", "TMDB-Lesezugriffstoken", "Token de lectura de TMDB", "Jeton de lecture TMDB", "Token di lettura TMDB", "Token de leitura do TMDB"],
+  ["Change API Token", "API-Token ändern", "Cambiar token de API", "Changer le jeton API", "Cambia token API", "Alterar token da API"],
+  ["Update Token", "Token aktualisieren", "Actualizar token", "Mettre à jour le jeton", "Aggiorna token", "Atualizar token"],
+  ["Notify about new episodes on startup", "Beim Start über neue Folgen informieren", "Avisar de episodios nuevos al iniciar", "Signaler les nouveaux épisodes au démarrage", "Avvisa dei nuovi episodi all'avvio", "Avisar sobre novos episódios ao iniciar"],
+  ["Notify when a download completes", "Benachrichtigen, wenn ein Download fertig ist", "Avisar al terminar una descarga", "Prévenir à la fin d'un téléchargement", "Avvisa al termine di un download", "Avisar quando um download terminar"],
+  ["New episodes available", "Neue Folgen verfügbar", "Nuevos episodios disponibles", "Nouveaux épisodes disponibles", "Nuovi episodi disponibili", "Novos episódios disponíveis"],
+  ["Clear Cache", "Cache leeren", "Borrar caché", "Vider le cache", "Svuota cache", "Limpar cache"],
+  ["Clear Watch Progress", "Fortschritt löschen", "Borrar progreso", "Effacer la progression", "Cancella progressi", "Limpar progresso"],
+  ["Delete All Downloads", "Alle Downloads löschen", "Eliminar todas las descargas", "Supprimer tous les téléchargements", "Elimina tutti i download", "Excluir todos os downloads"],
+  ["Reset App", "App zurücksetzen", "Restablecer la app", "Réinitialiser l'app", "Reimposta app", "Redefinir o app"],
+  ["This action cannot be undone.", "Das kann nicht rückgängig gemacht werden.", "Esta acción no se puede deshacer.", "Cette action est irréversible.", "Questa azione non può essere annullata.", "Esta ação não pode ser desfeita."],
+  ["Something went wrong", "Etwas ist schiefgelaufen", "Algo salió mal", "Un problème est survenu", "Qualcosa è andato storto", "Algo deu errado"],
+  ["Reload App", "App neu laden", "Recargar la app", "Recharger l'app", "Ricarica app", "Recarregar o app"],
+  ["Open in Browser", "Im Browser öffnen", "Abrir en el navegador", "Ouvrir dans le navigateur", "Apri nel browser", "Abrir no navegador"],
+  ["Open in browser", "Im Browser öffnen", "Abrir en el navegador", "Ouvrir dans le navigateur", "Apri nel browser", "Abrir no navegador"],
+  ["Who's watching?", "Wer schaut gerade?", "¿Quién está viendo?", "Qui regarde ?", "Chi guarda?", "Quem está assistindo?"],
+  ["Manage profiles", "Profile verwalten", "Gestionar perfiles", "Gérer les profils", "Gestisci profili", "Gerenciar perfis"],
+  ["+ Add profile", "+ Profil hinzufügen", "+ Añadir perfil", "+ Ajouter un profil", "+ Aggiungi profilo", "+ Adicionar perfil"],
+  ["Add profile", "Profil hinzufügen", "Añadir perfil", "Ajouter un profil", "Aggiungi profilo", "Adicionar perfil"],
+  ["Watching now", "Schaut gerade", "Viendo ahora", "Regarde en ce moment", "Sta guardando", "Assistindo agora"],
+  ["Tap Switch to use this profile", "Tippe auf Wechseln, um dieses Profil zu nutzen", "Toca Cambiar para usar este perfil", "Touchez Changer pour utiliser ce profil", "Tocca Cambia per usare questo profilo", "Toque em Trocar para usar este perfil"],
+];
+
+// patterns: [regex on English, (match, lang) => text]
+const P = [
+  [/^Because you watched (.+)$/, (m, i) => [`Weil du ${m[1]} gesehen hast`, `Porque viste ${m[1]}`, `Parce que vous avez regardé ${m[1]}`, `Perché hai guardato ${m[1]}`, `Porque você assistiu ${m[1]}`][i]],
+  [/^Download season (\d+)$/, (m, i) => [`Staffel ${m[1]} herunterladen`, `Descargar temporada ${m[1]}`, `Télécharger la saison ${m[1]}`, `Scarica stagione ${m[1]}`, `Baixar temporada ${m[1]}`][i]],
+  [/^Season (\d+)$/, (m, i) => [`Staffel ${m[1]}`, `Temporada ${m[1]}`, `Saison ${m[1]}`, `Stagione ${m[1]}`, `Temporada ${m[1]}`][i]],
+  [/^In (\d+) lists?$/, (m, i) => [`In ${m[1]} Liste${m[1] === "1" ? "" : "n"}`, `En ${m[1]} lista${m[1] === "1" ? "" : "s"}`, `Dans ${m[1]} liste${m[1] === "1" ? "" : "s"}`, `In ${m[1]} list${m[1] === "1" ? "a" : "e"}`, `Em ${m[1]} lista${m[1] === "1" ? "" : "s"}`][i]],
+  [/^(\d+) titles?$/, (m, i) => [`${m[1]} Titel`, `${m[1]} título${m[1] === "1" ? "" : "s"}`, `${m[1]} titre${m[1] === "1" ? "" : "s"}`, `${m[1]} titol${m[1] === "1" ? "o" : "i"}`, `${m[1]} título${m[1] === "1" ? "" : "s"}`][i]],
+  [/^in (\d+) days$/, (m, i) => [`in ${m[1]} Tagen`, `en ${m[1]} días`, `dans ${m[1]} jours`, `tra ${m[1]} giorni`, `em ${m[1]} dias`][i]],
+  [/^Your (\d{4}) in Streambert$/, (m, i) => [`Dein Jahr ${m[1]} in Streambert`, `Tu ${m[1]} en Streambert`, `Votre année ${m[1]} sur Streambert`, `Il tuo ${m[1]} su Streambert`, `Seu ${m[1]} no Streambert`][i]],
+  [/^Watchlist \((\d+)\)$/, (m, i) => [`Merkliste (${m[1]})`, `Mi lista (${m[1]})`, `Ma liste (${m[1]})`, `La mia lista (${m[1]})`, `Minha lista (${m[1]})`][i]],
+  [/^My Lists \((\d+)\)$/, (m, i) => [`Meine Listen (${m[1]})`, `Mis listas (${m[1]})`, `Mes listes (${m[1]})`, `Le mie liste (${m[1]})`, `Minhas listas (${m[1]})`][i]],
+  [/^(Auto-download · )?Season (\d+): getting episode (\d+) \((\d+)\/(\d+)\)…$/, (m, i) => {
+    const a = m[1] ? ["Auto-Download · ", "Descarga automática · ", "Téléchargement auto · ", "Download automatico · ", "Download automático · "][i] : "";
+    return a + [`Staffel ${m[2]}: Folge ${m[3]} wird geholt (${m[4]}/${m[5]})…`, `Temporada ${m[2]}: obteniendo episodio ${m[3]} (${m[4]}/${m[5]})…`, `Saison ${m[2]} : récupération de l'épisode ${m[3]} (${m[4]}/${m[5]})…`, `Stagione ${m[2]}: recupero episodio ${m[3]} (${m[4]}/${m[5]})…`, `Temporada ${m[2]}: buscando episódio ${m[3]} (${m[4]}/${m[5]})…`][i];
+  }],
+  [/^(\d+) episodes? added to Downloads$/, (m, i) => [`${m[1]} Folge${m[1] === "1" ? "" : "n"} zu Downloads hinzugefügt`, `${m[1]} episodio${m[1] === "1" ? "" : "s"} añadido${m[1] === "1" ? "" : "s"} a Descargas`, `${m[1]} épisode${m[1] === "1" ? "" : "s"} ajouté${m[1] === "1" ? "" : "s"} aux téléchargements`, `${m[1]} episodi${m[1] === "1" ? "o aggiunto" : " aggiunti"} ai download`, `${m[1]} episódio${m[1] === "1" ? "" : "s"} adicionado${m[1] === "1" ? "" : "s"} aos downloads`][i]],
+  [/^couldn't get E([\d, E]+) \(try another source\)$/, (m, i) => [`E${m[1]} nicht gefunden (andere Quelle probieren)`, `No se pudo obtener E${m[1]} (prueba otra fuente)`, `Impossible d'obtenir E${m[1]} (essayez une autre source)`, `Impossibile ottenere E${m[1]} (prova un'altra fonte)`, `Não foi possível obter E${m[1]} (tente outra fonte)`][i]],
+  [/^Paused · (\d+)%$/, (m, i) => [`Pausiert · ${m[1]} %`, `En pausa · ${m[1]} %`, `En pause · ${m[1]} %`, `In pausa · ${m[1]}%`, `Pausado · ${m[1]}%`][i]],
+];
+
+// ── language selection ──────────────────────────────────────────────────────
+export function languageSetting() {
+  try {
+    return JSON.parse(localStorage.getItem(SETTING) || '"system"') || "system";
+  } catch {
+    return "system";
+  }
+}
+export function setLanguageSetting(v) {
+  try {
+    localStorage.setItem(SETTING, JSON.stringify(v || "system"));
+  } catch {}
+}
+export function systemLanguage() {
+  const l = String(navigator.language || "en").slice(0, 2).toLowerCase();
+  return ORDER.includes(l) ? l : "en";
+}
+export function currentLanguage() {
+  const s = languageSetting();
+  return s !== "system" && (s === "en" || ORDER.includes(s)) ? s : systemLanguage();
+}
+/** translate one English UI string (for code that builds text itself) */
+export function t(en) {
+  const i = ORDER.indexOf(currentLanguage());
+  if (i < 0) return en;
+  return lookup(en, i) ?? en;
+}
+
+let MAP = null;
+function lookup(s, i) {
+  if (!MAP) {
+    MAP = new Map();
+    for (const row of T) MAP.set(row[0], row.slice(1));
+  }
+  const hit = MAP.get(s);
+  if (hit) return hit[i];
+  for (const [rx, fn] of P) {
+    const m = s.match(rx);
+    if (m) return fn(m, i);
+  }
+  return null;
+}
+
+// containers whose text is data (titles, names, overviews), never UI
+const SKIP = "script,style,textarea,input,select,code,pre,[contenteditable],[data-no-i18n],.detail-title,.hero-title,.hero-overview,.card-title,.media-card-title,.carousel-title-text,.sbu-name,.sbx-list-name,.sbx-recap-title,.saved-thumb,.overview,.detail-overview,.episode-title,.ep-card__title,.search-result-title,.dl-card__name,.cast-name,.person-name";
+
+function translateTree(rootNode, i) {
+  const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT);
+  const todo = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) todo.push(n);
+  for (const n of todo) translateText(n, i);
+  if (rootNode.querySelectorAll) {
+    rootNode.querySelectorAll("[placeholder],[title],[aria-label]").forEach((el) => translateAttrs(el, i));
+    if (rootNode.matches?.("[placeholder],[title],[aria-label]")) translateAttrs(rootNode, i);
+  }
+}
+function translateText(n, i) {
+  const v = n.nodeValue;
+  if (!v || !/[A-Za-z]/.test(v)) return;
+  const p = n.parentElement;
+  if (!p || p.closest(SKIP)) return;
+  const trimmed = v.trim();
+  const tr = lookup(trimmed, i);
+  if (tr != null && tr !== trimmed) n.nodeValue = v.replace(trimmed, tr);
+}
+function translateAttrs(el, i) {
+  if (el.closest(SKIP) && !el.matches("input,textarea")) return;
+  for (const a of ["placeholder", "title", "aria-label"]) {
+    const v = el.getAttribute(a);
+    if (!v) continue;
+    const tr = lookup(v.trim(), i);
+    if (tr != null && tr !== v) el.setAttribute(a, tr);
+  }
+}
+
+/** Start translating the UI (no-op for English). Call once at startup. */
+export function initI18n() {
+  const lang = currentLanguage();
+  document.documentElement.lang = lang;
+  // the TMDB metadata language follows the app language until it's set by hand
+  try {
+    if (!localStorage.getItem("streambert_tmdbLang")) {
+      const L = LANGUAGES.find((x) => x.code === lang);
+      if (L && L.code !== "en") localStorage.setItem("streambert_tmdbLang", JSON.stringify(L.tmdb));
+    }
+  } catch {}
+  const i = ORDER.indexOf(lang);
+  if (i < 0) return;
+  const run = () => {
+    translateTree(document.body, i);
+    new MutationObserver((muts) => {
+      for (const m of muts) {
+        if (m.type === "characterData") translateText(m.target, i);
+        else if (m.type === "attributes") translateAttrs(m.target, i);
+        else
+          for (const n of m.addedNodes) {
+            if (n.nodeType === 3) translateText(n, i);
+            else if (n.nodeType === 1) translateTree(n, i);
+          }
+      }
+    }).observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["placeholder", "title", "aria-label"],
+    });
+  };
+  if (document.body) run();
+  else document.addEventListener("DOMContentLoaded", run, { once: true });
+}

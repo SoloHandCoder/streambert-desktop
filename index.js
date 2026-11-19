@@ -12,6 +12,8 @@ const {
 } = require("electron");
 const path = require("path");
 const localMedia = require("./src/ipc/localMedia");
+const linksIpc = require("./src/ipc/links");
+const castIpc = require("./src/ipc/cast");
 localMedia.registerScheme();
 
 // -- RAM / performance flags ---------------------------------------------------
@@ -618,6 +620,8 @@ function createWindow() {
 // -- Register all IPC modules --------------------------------------------------
 storageIpc.register();
 downloadsIpc.register(getMainWindow);
+linksIpc.register(getMainWindow);
+castIpc.register(getMainWindow, { getStreamMeta: (u) => playerIpc.getStreamMeta(u) });
 subtitlesIpc.register({
   getDownloads: downloadsIpc.getDownloads,
   saveDownloads: downloadsIpc.saveDownloads,
@@ -807,7 +811,8 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
+  app.on("second-instance", (_e, argv) => {
+    linksIpc.handleArgv(argv);
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
@@ -820,7 +825,10 @@ if (!gotTheLock) {
     createWindow();
   });
   app.on("window-all-closed", () => app.quit());
-  app.on("before-quit", () => discordRpc.shutdown());
+  app.on("before-quit", () => {
+    discordRpc.shutdown();
+    castIpc.stopCast();
+  });
   app.on("activate", () => {
     if (mainWindow === null) createWindow();
   });

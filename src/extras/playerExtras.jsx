@@ -67,11 +67,11 @@ function cueCss(st) {
   );
 }
 
-function tickJs(st, offset) {
+function tickJs(st, offset, meta) {
   const css = cueCss(st);
   const pos = st.position;
   return `(() => {
-    const css = ${JSON.stringify(css)}, pos = ${JSON.stringify(pos)}, off = ${Number(offset) || 0};
+    const css = ${JSON.stringify(css)}, pos = ${JSON.stringify(pos)}, off = ${Number(offset) || 0}, meta = ${JSON.stringify(meta || null)};
     let el = document.getElementById("sb-cue-style");
     if (css) {
       if (!el) { el = document.createElement("style"); el.id = "sb-cue-style"; (document.head || document.documentElement).appendChild(el); }
@@ -98,6 +98,15 @@ function tickJs(st, offset) {
             c.line = pos === "top" ? 1 : pos === "higher" ? -4 : "auto";
           }
         }
+      }
+    }
+    // media keys + the Windows media overlay show what's playing
+    if (playing && meta && navigator.mediaSession && window.MediaMetadata) {
+      const cur = navigator.mediaSession.metadata;
+      if (!cur || cur.title !== meta.title) {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title, artist: meta.subtitle || "Streambert", artwork: meta.artwork ? [{ src: meta.artwork, sizes: "342x513", type: "image/jpeg" }] : [] });
+        } catch (e) {}
       }
     }
     return { playing };
@@ -131,7 +140,15 @@ export function usePlayerExtras({ webviewRef, active, info, offsetKey }) {
       } catch {
         return; // not attached yet
       }
-      const js = tickJs(getSubStyle(), getOffset(keyRef.current || ""));
+      const inf = infoRef.current;
+      const meta = inf?.title
+        ? {
+            title: inf.title,
+            subtitle: inf.episodeLabel || "Streambert",
+            artwork: inf.poster_path ? `https://image.tmdb.org/t/p/w342${inf.poster_path}` : null,
+          }
+        : null;
+      const js = tickJs(getSubStyle(), getOffset(keyRef.current || ""), meta);
       const r = await window.electron.playerTick(id, js).catch(() => null);
       if (stopped) return;
       if (r?.playing && infoRef.current?.id && elapsed > 0) trackWatchSecond(infoRef.current, elapsed);

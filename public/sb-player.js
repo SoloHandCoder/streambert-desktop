@@ -89,6 +89,9 @@
   ui.close.hidden = !CAN_CLOSE;
   ui.cast.hidden = !CAN_CAST;
   if ((!FRAMED || PC) && !document.pictureInPictureEnabled) ui.pip.hidden = true;
+  if (PC && navigator.mediaSession && window.MediaMetadata) {
+    try { navigator.mediaSession.metadata = new MediaMetadata({ title: TITLE || "Streambert", artist: "Streambert" }); } catch (e) {}
+  }
   if (PC) {
     root.classList.add("pc");
     try {

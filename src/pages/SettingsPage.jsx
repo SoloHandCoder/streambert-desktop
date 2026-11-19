@@ -1,3 +1,4 @@
+import TraktSettings from "../extras/TraktSettings";
 import { useState, useEffect, useRef } from "react";
 import ReminderSettings from "../extras/ReminderSettings";
 import CloudSyncSection from "../components/CloudSyncSection";
@@ -4376,6 +4377,7 @@ export default function SettingsPage({
           />
           <ProfilesSection />
           <CloudSyncSection />
+          <TraktSettings apiKey={apiKey} />
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════ */}

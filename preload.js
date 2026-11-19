@@ -39,6 +39,8 @@ contextBridge.exposeInMainWorld("electron", {
     return () => ipcRenderer.removeListener("open-link", h);
   },
   takePendingLink: () => ipcRenderer.invoke("take-pending-link"),
+  traktFetch: (args) => ipcRenderer.invoke("trakt-fetch", args),
+  saveImage: (args) => ipcRenderer.invoke("save-image", args),
   // Chromecast
   castDiscover: () => ipcRenderer.invoke("cast-discover"),
   castStart: (args) => ipcRenderer.invoke("cast-start", args),

@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { trackWatchSecond } from "./libraryExtras.js";
+import { traktScrobble } from "./trakt.js";
 
 export const STYLE_KEY = "streambert_subtitleStyle"; // same key as the Android player
 const OFFSET_PREFIX = "streambert_subOffset_";
@@ -79,10 +80,11 @@ function tickJs(st, offset, meta) {
     } else if (el) el.remove();
     const vids = document.querySelectorAll("video");
     if (!vids.length) return null;
-    let playing = false;
+    let playing = false, pos = 0, len = 0;
     for (const v of vids) {
       // short clips (ads, previews) don't count as watching
       if (!v.paused && !v.ended && v.readyState > 2 && v.duration > 120) playing = true;
+      if (v.duration > 120) { pos = v.currentTime; len = v.duration; }
       for (const t of Array.from(v.textTracks || [])) {
         const cues = t.cues;
         if (!cues) continue;
@@ -109,7 +111,7 @@ function tickJs(st, offset, meta) {
         } catch (e) {}
       }
     }
-    return { playing };
+    return { playing, t: pos, d: len };
   })()`;
 }
 
@@ -152,6 +154,7 @@ export function usePlayerExtras({ webviewRef, active, info, offsetKey }) {
       const r = await window.electron.playerTick(id, js).catch(() => null);
       if (stopped) return;
       if (r?.playing && infoRef.current?.id && elapsed > 0) trackWatchSecond(infoRef.current, elapsed);
+      if (r && r.d > 0 && infoRef.current?.id) traktScrobble(infoRef.current, (r.t / r.d) * 100, !!r.playing);
     };
     const t = setInterval(tick, TICK_MS);
     const onChange = () => tick();

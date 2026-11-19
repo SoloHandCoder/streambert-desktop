@@ -1,3 +1,4 @@
+import { shareStatsCard } from "./statsCard.js";
 // Personal ratings, custom lists and watch statistics UI (desktop).
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -459,12 +460,39 @@ function StatsPage({ apiKey, onClose, onSelect }) {
   const busiest = y.months.indexOf(Math.max(...y.months));
   const monthMax = Math.max(1, ...y.months);
   const top = yearTitles[0];
+  const [sharing, setSharing] = useState(false);
 
   return createPortal(
     <div className="sbx-page fade-in">
       <div className="sbx-page-bar">
         <button className="btn btn-ghost" onClick={onClose}>‹ Back</button>
         <div className="sbx-page-title">Watch Stats</div>
+        {y.total > 0 && (
+          <button
+            className="btn btn-ghost"
+            disabled={sharing}
+            onClick={async () => {
+              setSharing(true);
+              try {
+                await shareStatsCard({
+                  year,
+                  totalSecs: y.total,
+                  titles: yearTitles.length,
+                  movies: movies.length,
+                  shows: shows.length,
+                  bestStreak: y.bestStreak,
+                  busiestMonth: y.total ? MONTHS[busiest] : "",
+                  top,
+                  genres: topGenres,
+                });
+              } finally {
+                setSharing(false);
+              }
+            }}
+          >
+            {sharing ? "…" : window.electron?.shareImage ? "Share" : "Save image"}
+          </button>
+        )}
       </div>
       <div className="sbx-page-body">
         {years.length > 1 && (

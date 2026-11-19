@@ -515,6 +515,8 @@ export default function TVPage({
       title: item.name || item.title || "",
       poster_path: item.poster_path || null,
       genres: (item.genres || []).map((g) => g?.name).filter(Boolean),
+      season: selectedSeason,
+      episode: selectedEp?.episode_number,
       episodeLabel: selectedEp ? `S${selectedSeason}E${selectedEp.episode_number}${selectedEp.name ? ` · ${selectedEp.name}` : ""}` : "",
     },
     offsetKey: subOffsetKey,

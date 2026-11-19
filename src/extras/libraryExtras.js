@@ -47,6 +47,7 @@ export function setMyRating(item, stars) {
   if (!stars) delete r[k];
   else r[k] = { stars, at: Date.now(), item: slim(item) };
   write(K_RATINGS, r);
+  import("./trakt.js").then((m) => m.traktRate(slim(item), stars)).catch(() => {});
 }
 
 // ── custom lists ─────────────────────────────────────────────────────────────

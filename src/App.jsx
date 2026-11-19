@@ -1,3 +1,4 @@
+import { traktMarkWatched } from "./extras/trakt.js";
 import KidsGate from "./extras/KidsGate";
 import DiscoverPage from "./extras/DiscoverPage";
 import PersonPage from "./extras/PersonPage";
@@ -943,6 +944,7 @@ export default function App() {
 
   const markWatchedRef = useRef(null);
   const markWatched = useCallback((key) => {
+    traktMarkWatched(key);
     onEpisodeWatched(key);
     setWatched((prev) => {
       const next = { ...prev, [key]: true };

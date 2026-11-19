@@ -14,6 +14,7 @@ const path = require("path");
 const localMedia = require("./src/ipc/localMedia");
 const linksIpc = require("./src/ipc/links");
 const castIpc = require("./src/ipc/cast");
+const extrasIpc = require("./src/ipc/extrasIpc");
 localMedia.registerScheme();
 
 // -- RAM / performance flags ---------------------------------------------------
@@ -621,6 +622,7 @@ function createWindow() {
 storageIpc.register();
 downloadsIpc.register(getMainWindow);
 linksIpc.register(getMainWindow);
+extrasIpc.register();
 castIpc.register(getMainWindow, { getStreamMeta: (u) => playerIpc.getStreamMeta(u) });
 subtitlesIpc.register({
   getDownloads: downloadsIpc.getDownloads,

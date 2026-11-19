@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { openLocalPlayer, canPlayBuiltIn } from "../extras/localPlayer";
 import {
   DownloadIcon,
   TrashIcon,
@@ -157,15 +158,15 @@ export default function DownloadsPage({
   }, [searchOpen]);
 
   // ── Stable derived lists ──────────────────────────────────────
-  const active = useMemo(
-    () => downloads.filter((d) => d.status === "downloading"),
-    [downloads],
-  );
+  // running, paused and failed (retryable) downloads
+  const isActive = (d) =>
+    d.status === "downloading" || d.status === "paused" || (d.status === "error" && !!d.m3u8Url);
+  const active = useMemo(() => downloads.filter(isActive), [downloads]);
 
   const finished = useMemo(
     () =>
       downloads
-        .filter((d) => d.status !== "downloading")
+        .filter((d) => !isActive(d))
         .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0)),
     [downloads],
   );
@@ -573,7 +574,15 @@ export default function DownloadsPage({
                   dl={dl}
                   fileExists={dl.isLocalOnly ? true : fileExistsCache[dl.id]}
                   onWatch={(subtitlePaths) =>
-                    subtitlePaths?.length > 0
+                    canPlayBuiltIn(dl.filePath)
+                      ? openLocalPlayer({
+                          filePath: dl.filePath,
+                          subtitlePaths,
+                          title: dl.name || "",
+                          progressKey: watchedKey ? "dlTime_" + watchedKey : null,
+                          durKey: dl.id ? "dlDur_" + dl.id : null,
+                        })
+                      : subtitlePaths?.length > 0
                       ? window.electron.openPathAtTime(
                           dl.filePath,
                           0,
@@ -653,8 +662,46 @@ export default function DownloadsPage({
 }
 
 // ── Active download card ───────────────────────────────────────────────────────
+// pause / resume / retry
+async function resumeOrRetry(dl, setBusy) {
+  setBusy(true);
+  try {
+    const folder = storage.get("downloaderFolder") || "";
+    const chk = folder ? await window.electron.checkDownloader(folder) : null;
+    if (!chk?.exists) {
+      alert("The downloader wasn't found. Check Settings → Downloads.");
+      return;
+    }
+    const r = await window.electron.resumeDownload(dl.id, chk.token);
+    if (!r?.ok && r?.error) alert(r.error);
+  } finally {
+    setBusy(false);
+  }
+}
+
+const PauseIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <rect x="6" y="5" width="4" height="14" rx="1" />
+    <rect x="14" y="5" width="4" height="14" rx="1" />
+  </svg>
+);
+const ResumeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10-6.5a1 1 0 0 0 0-1.72l-10-6.5A1 1 0 0 0 8 5.5z" />
+  </svg>
+);
+const RetryIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+    <path d="M20 4v7h-7" />
+  </svg>
+);
+
 const ActiveCard = memo(function ActiveCard({ dl, onDelete, onSelect }) {
   const pct = dl.progress || 0;
+  const [busy, setBusy] = useState(false);
+  const paused = dl.status === "paused";
+  const failed = dl.status === "error";
   return (
     <div className="dl-card dl-card-active">
       <div className="dl-card__header">
@@ -708,7 +755,27 @@ const ActiveCard = memo(function ActiveCard({ dl, onDelete, onSelect }) {
           </div>
         </div>
         <div className="dl-card__right">
-          <div className="dl-card__pct">{pct.toFixed(1)}%</div>
+          <div
+            className="dl-card__pct"
+            style={paused || failed ? { fontSize: 13, fontFamily: "var(--font-body)", fontWeight: 600, color: failed ? "var(--red)" : "var(--text2)" } : undefined}
+          >
+            {paused ? `Paused · ${pct.toFixed(0)}%` : failed ? "Failed" : `${pct.toFixed(1)}%`}
+          </div>
+          {dl.status === "downloading" && window.electron?.pauseDownload && (
+            <button className="icon-btn" onClick={() => window.electron.pauseDownload(dl.id)} title="Pause">
+              <PauseIcon />
+            </button>
+          )}
+          {(paused || failed) && window.electron?.resumeDownload && (
+            <button
+              className="icon-btn"
+              disabled={busy}
+              onClick={() => resumeOrRetry(dl, setBusy)}
+              title={paused ? "Resume" : "Retry"}
+            >
+              {paused ? <ResumeIcon /> : <RetryIcon />}
+            </button>
+          )}
           <button className="icon-btn" onClick={onDelete} title="Remove">
             <TrashIcon />
           </button>
@@ -716,7 +783,7 @@ const ActiveCard = memo(function ActiveCard({ dl, onDelete, onSelect }) {
       </div>
       <div className="dl-card__bar-wrap">
         <div
-          className={`dl-card__bar-fill${pct > 0 ? " dl-card__bar-fill--active" : ""}`}
+          className={`dl-card__bar-fill${pct > 0 && !paused && !failed ? " dl-card__bar-fill--active" : ""}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
@@ -791,6 +858,10 @@ const LocalFileCard = memo(function LocalFileCard({
   useEffect(() => {
     if (!storageKey) return;
     setSavedSecs(storage.get(storageKey) ?? null);
+    // …and after the built-in player closes
+    const h = () => setSavedSecs(storage.get(storageKey) ?? null);
+    window.addEventListener("streambert:local-player-closed", h);
+    return () => window.removeEventListener("streambert:local-player-closed", h);
   }, [storageKey]);
 
   // Fetch video duration once when popover first opens
@@ -914,12 +985,28 @@ const LocalFileCard = memo(function LocalFileCard({
         episode: dl.episode != null ? Number(dl.episode) : null,
       });
     }
-    if (savedSecs > 0 && window.electron?.openPathAtTime) {
+    if (canPlayBuiltIn(dl.filePath)) {
+      openLocalPlayer({
+        filePath: dl.filePath,
+        seconds: savedSecs > 0 ? savedSecs : 0,
+        subtitlePaths: dl.subtitlePaths,
+        title:
+          dl.mediaType === "tv" && dl.season && dl.episode && !/S\d+\s*E\d+/i.test(dl.name || "")
+            ? `${dl.name} · S${dl.season}E${dl.episode}`
+            : dl.name || "",
+        media:
+          dl.tmdbId && dl.mediaType
+            ? { id: dl.tmdbId, media_type: dl.mediaType, title: dl.name || "", poster_path: dl.posterPath || null }
+            : null,
+        progressKey: storageKey,
+        durKey,
+      });
+    } else if (savedSecs > 0 && window.electron?.openPathAtTime) {
       window.electron.openPathAtTime(dl.filePath, savedSecs, dl.subtitlePaths);
     } else {
       onWatch(dl.subtitlePaths);
     }
-  }, [dl.filePath, savedSecs, onWatch, onHistory, dl]);
+  }, [dl.filePath, savedSecs, onWatch, onHistory, dl, storageKey, durKey]);
 
   const progressLabel = (() => {
     if (isWatched) return null;

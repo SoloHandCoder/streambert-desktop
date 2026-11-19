@@ -1,0 +1,44 @@
+#sb-season-dl {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: min(440px, calc(100vw - 120px));
+  z-index: 5500;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  transform: translateY(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+#sb-season-dl.sb-sdl--on {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+.sb-sdl__text { font-size: 13px; color: var(--text); line-height: 1.4; }
+.sb-sdl__bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface3);
+  overflow: hidden;
+}
+.sb-sdl__fill { height: 100%; width: 0; background: var(--red); transition: width 0.3s ease; }
+.sb-sdl__x {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font: 500 12px var(--font-body);
+  cursor: pointer;
+}
+.sb-season-dl-btn { margin: 0 0 14px; }

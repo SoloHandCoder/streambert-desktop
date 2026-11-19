@@ -481,7 +481,9 @@ export default function MoviePage({
 
   useEffect(() => {
     if (!window.electron) return;
-    const handler = window.electron.onM3u8Found((url) => {
+    const handler = window.electron.onM3u8Found((url, fromId) => {
+      // streams found by a hidden season-download player aren't this page's
+      if (fromId != null && window.__sbCaptureIds?.has(fromId)) return;
       setM3u8Url((prev) => (prev !== url ? url : prev));
     });
     return () => window.electron.offM3u8Found(handler);

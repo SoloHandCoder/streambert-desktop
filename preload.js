@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld("electron", {
 
   // m3u8 capture
   onM3u8Found: (cb) => {
-    const h = (_, url) => cb(url);
+    const h = (_, url, webContentsId) => cb(url, webContentsId);
     ipcRenderer.on("m3u8-found", h);
     return h;
   },
@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld("electron", {
   // Download actions
   checkDownloader: (folder) => ipcRenderer.invoke("check-downloader", folder),
   runDownload: (args) => ipcRenderer.invoke("run-download", args),
+  pauseDownload: (id) => ipcRenderer.invoke("pause-download", { id }),
+  resumeDownload: (id, token) => ipcRenderer.invoke("resume-download", { id, token }),
   getDownloads: () => ipcRenderer.invoke("get-downloads"),
   deleteDownload: (args) => ipcRenderer.invoke("delete-download", args),
   showInFolder: (path) => ipcRenderer.invoke("show-in-folder", path),

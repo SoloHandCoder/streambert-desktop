@@ -86,6 +86,7 @@ import { setPlayerGamepadActive } from "../utils/gamepadPlayerState";
 import HiAnimeLoader from "../components/HiAnimeLoader";
 import { RateButton, ListsButton } from "../extras/LibraryUI";
 import { usePlayerExtras, SubtitleButton } from "../extras/playerExtras";
+import { downloadSeason } from "../extras/seasonDownload";
 
 // ── Partial-circle progress icon (cached per pct tier) ───────────────────────
 // Uses a single SVG arc. Three instances (25/50/75)
@@ -881,7 +882,9 @@ export default function TVPage({
 
   useEffect(() => {
     if (!window.electron) return;
-    const handler = window.electron.onM3u8Found((url) => {
+    const handler = window.electron.onM3u8Found((url, fromId) => {
+      // streams found by a hidden season-download player aren't this page's
+      if (fromId != null && window.__sbCaptureIds?.has(fromId)) return;
       setM3u8Url((prev) => (prev !== url ? url : prev));
     });
     return () => window.electron.offM3u8Found(handler);
@@ -1114,7 +1117,8 @@ export default function TVPage({
         (dl.tmdbId === item.id || dl.mediaId === item.id) &&
         (dl.status === "completed" ||
           dl.status === "local" ||
-          dl.status === "downloading")
+          dl.status === "downloading" ||
+          dl.status === "paused")
       ) {
         map.set(`s${dl.season}e${dl.episode}`, dl);
       }
@@ -2425,7 +2429,7 @@ export default function TVPage({
                             : "#4caf50",
                       }}
                     >
-                      {currentEpDownload.status === "downloading" ? "↓" : "✓"}
+                      {currentEpDownload.status === "downloading" ? "↓" : currentEpDownload.status === "paused" ? "Ⅱ" : "✓"}
                     </span>
                   ) : (
                     <DownloadIcon />
@@ -2646,6 +2650,48 @@ export default function TVPage({
                 <div className="spinner" />
               </div>
             )}
+            {!loadingSeason &&
+              !restricted &&
+              currentSeasonEpisodes?.length > 0 && (
+                <button
+                  className="btn btn-secondary sb-season-dl-btn"
+                  title="Download every released episode of this season (2 at a time)"
+                  onClick={() =>
+                    downloadSeason({
+                      baseName: `${title}${effectiveYear ? ` (${effectiveYear})` : ""}`,
+                      tmdbId: item.id,
+                      season: selectedSeason,
+                      posterPath: d.poster_path,
+                      episodes: currentSeasonEpisodes.filter(
+                        (ep) => !ep.air_date || new Date(ep.air_date) <= new Date(),
+                      ),
+                      skip: new Set(
+                        currentSeasonEpisodes
+                          .filter((ep) => downloadsByEpisodeKey.has(`s${selectedSeason}e${ep.episode_number}`))
+                          .map((ep) => ep.episode_number),
+                      ),
+                      async: isAsync,
+                      animeTitle: title,
+                      dubMode,
+                      embedUrl: (ep) =>
+                        getSourceUrl(
+                          playerSource,
+                          "tv",
+                          srcId.id,
+                          ep._tmdbSeason ?? selectedSeason,
+                          ep._tmdbAbsolute ?? ep.episode_number,
+                          {},
+                          playerAccentColor,
+                          playerSubLang,
+                        ),
+                      onStarted: onDownloadStarted,
+                    })
+                  }
+                >
+                  <DownloadIcon />
+                  Download season {selectedSeason}
+                </button>
+              )}
             {!loadingSeason &&
               (seasonData?.episodes || episodeGroupCurrentEpisodes?.length) && (
                 <div className="episodes-grid">

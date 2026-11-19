@@ -58,6 +58,8 @@ function loadDownloads() {
   }
 }
 
+const pausedIds = new Set(); // processes stopped on purpose (pause / app exit)
+
 function saveDownloads() {
   try {
     const toSave = downloads.filter(
@@ -67,8 +69,17 @@ function saveDownloads() {
   } catch {}
 }
 
-function cleanupTempFiles(downloadPath) {
+// file-name starts of downloads in a folder whose partial files must be kept
+function keptPrefixes(downloadPath, exceptId) {
+  return downloads
+    .filter((d) => d.id !== exceptId && d.downloadPath === downloadPath && (d.status === "paused" || d.status === "downloading"))
+    .map((d) => String(d.name || "").replace(/[<>:"/\\|?*\x00-\x1f]/g, "").trim())
+    .filter(Boolean);
+}
+
+function cleanupTempFiles(downloadPath, exceptId = null) {
   if (!downloadPath) return;
+  const keep = keptPrefixes(downloadPath, exceptId);
   const TEMP_PATTERNS = [
     /\.part$/,
     /\.part\.\d+$/,
@@ -80,6 +91,7 @@ function cleanupTempFiles(downloadPath) {
   try {
     const entries = fs.readdirSync(downloadPath);
     for (const entry of entries) {
+      if (keep.some((k) => entry.startsWith(k))) continue;
       if (TEMP_PATTERNS.some((p) => p.test(entry))) {
         try {
           fs.unlinkSync(path.join(downloadPath, entry));
@@ -91,13 +103,15 @@ function cleanupTempFiles(downloadPath) {
 
 function killAllDownloads() {
   for (const [id, proc] of activeProcs.entries()) {
+    pausedIds.add(id);
     try {
       proc.kill("SIGKILL");
     } catch {}
     const idx = downloads.findIndex((d) => d.id === id);
     if (idx !== -1) {
-      downloads[idx].status = "error";
-      downloads[idx].lastMessage = "Cancelled on exit";
+      downloads[idx].status = "paused";
+      downloads[idx].speed = "";
+      downloads[idx].lastMessage = "Paused when Streambert was closed";
     }
     activeProcs.delete(id);
   }
@@ -291,6 +305,22 @@ function register(getMainWindow) {
           String(d.episode ?? "") === String(entry.episode ?? "");
         downloads = downloads.filter((d) => !isSameMedia(d));
 
+        startProc(id, binaryPath);
+
+        return { ok: true, id };
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    },
+  );
+
+
+  // Spawns the downloader for an entry (new download, resume or retry). The
+  // downloader continues partial files with the same name in the same folder.
+  function startProc(id, binaryPath) {
+    const entry = downloads.find((d) => d.id === id);
+    if (!entry) return;
+    const { name, m3u8Url, downloadPath, logPath } = entry;
         const args = [
           "--cli",
           m3u8Url,
@@ -510,6 +540,7 @@ function register(getMainWindow) {
 
         proc.on("error", (err) => {
           activeProcs.delete(id);
+          if (pausedIds.delete(id)) return; // paused on purpose
           const idx = downloads.findIndex((d) => d.id === id);
           if (idx === -1) return;
           const msg =
@@ -527,6 +558,7 @@ function register(getMainWindow) {
 
         proc.on("close", (code) => {
           activeProcs.delete(id);
+          if (pausedIds.delete(id)) return; // paused on purpose: keep the partial files
           if (buf.trim()) {
             appendLog(buf.trim());
             handleLine(buf.trim());
@@ -710,12 +742,41 @@ function register(getMainWindow) {
           saveDownloads();
         });
 
-        return { ok: true, id };
-      } catch (e) {
-        return { ok: false, error: e.message };
-      }
-    },
-  );
+  }
+
+  // ── pause / resume / retry ────────────────────────────────────────────────
+  ipcMain.handle("pause-download", (_, { id } = {}) => {
+    const idx = downloads.findIndex((d) => d.id === id);
+    if (idx === -1 || !activeProcs.has(id)) return { ok: false };
+    pausedIds.add(id);
+    try {
+      activeProcs.get(id).kill("SIGKILL");
+    } catch {}
+    activeProcs.delete(id);
+    downloads[idx] = { ...downloads[idx], status: "paused", speed: "", lastMessage: "Paused" };
+    sendProgress({ id, status: "paused", speed: "", lastMessage: "Paused" });
+    saveDownloads();
+    return { ok: true };
+  });
+
+  ipcMain.handle("resume-download", (_, { id, token } = {}) => {
+    const idx = downloads.findIndex((d) => d.id === id);
+    if (idx === -1) return { ok: false, error: "Download not found" };
+    if (activeProcs.has(id)) return { ok: true };
+    const binaryPath = trustedBinaryPaths.get(token);
+    if (!binaryPath) return { ok: false, error: "Invalid or unknown downloader token" };
+    const d = downloads[idx];
+    if (!d.m3u8Url || !d.downloadPath) return { ok: false, error: "Nothing to resume" };
+    if (!d.logPath) d.logPath = path.join(os.tmpdir(), `streambert_dl_${id}.log`);
+    try {
+      fs.appendFileSync(d.logPath, `${"─".repeat(60)}\nResumed: ${new Date().toISOString()}\n`, "utf8");
+    } catch {}
+    downloads[idx] = { ...d, status: "downloading", speed: "", completedAt: null, lastMessage: "Resuming…" };
+    sendProgress({ id, status: "downloading", speed: "", completedAt: null, lastMessage: "Resuming…" });
+    startProc(id, binaryPath);
+    saveDownloads();
+    return { ok: true };
+  });
 
   ipcMain.handle("get-downloads", () => downloads);
 
@@ -739,7 +800,7 @@ function register(getMainWindow) {
         } catch {}
       }
       const dlPath = dlEntry?.downloadPath;
-      if (dlPath) cleanupTempFiles(dlPath);
+      if (dlPath) cleanupTempFiles(dlPath, id);
       downloads = downloads.filter((d) => d.id !== id);
       saveDownloads();
       return { ok: true };

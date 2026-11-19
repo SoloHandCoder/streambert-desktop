@@ -11,6 +11,8 @@ const {
   Notification,
 } = require("electron");
 const path = require("path");
+const localMedia = require("./src/ipc/localMedia");
+localMedia.registerScheme();
 
 // -- RAM / performance flags ---------------------------------------------------
 // Low-RAM mode is ON by default. Disable it with STREAMBERT_LOW_RAM=0.
@@ -439,7 +441,7 @@ function setupSession(playerSession, trailerSession) {
       const mw = getMainWindow();
       if (mw && !mw.isDestroyed()) {
         if (url.includes(".m3u8")) {
-          mw.webContents.send("m3u8-found", url);
+          mw.webContents.send("m3u8-found", url, details.webContentsId ?? null);
         } else if (url.includes(".vtt")) {
           const { extractSubtitleLang } = require("./src/ipc/subtitles");
           mw.webContents.send("subtitle-found", {
@@ -814,6 +816,7 @@ if (!gotTheLock) {
 
   app.whenReady().then(() => {
     _bench("app ready");
+    localMedia.registerHandler();
     createWindow();
   });
   app.on("window-all-closed", () => app.quit());

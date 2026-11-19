@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import CloudSyncSection from "../components/CloudSyncSection";
 import ProfilesSection from "../extras/ProfilesSection";
+import { builtInPlayerEnabled, setBuiltInPlayer } from "../extras/localPlayer";
 import { SubtitleStylePicker } from "../extras/playerExtras";
 import UpdateModal from "../components/UpdateModal";
 import {
@@ -378,6 +379,32 @@ function ConfirmDialog({
 }
 
 // ── Toggle Switch ─────────────────────────────────────────────────────────────
+function BuiltInPlayerSection() {
+  const [on, setOn] = useState(builtInPlayerEnabled);
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div className="settings-section-title">Downloaded videos</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Toggle
+          value={on}
+          onChange={(v) => {
+            setBuiltInPlayer(v);
+            setOn(v);
+          }}
+          title="Play downloads in Streambert"
+        />
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Play downloads in Streambert</div>
+          <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2, lineHeight: 1.5 }}>
+            Uses the built-in player with your subtitle style, remembered volume and resume. Turn off to open mpv / VLC
+            or your system player instead.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Toggle({ value, onChange, title }) {
   return (
     <button
@@ -3800,8 +3827,9 @@ export default function SettingsPage({
         <div ref={secPlayback} style={{ scrollMarginTop: 80 }}>
           <SectionGroupHeader
             title="Playback"
-            subtitle="Trailer source and auto-watched behavior"
+            subtitle="Downloaded-video player, trailer source and auto-watched behavior"
           />
+          <BuiltInPlayerSection />
 
           {/* Invidious */}
           <div style={{ marginBottom: 40 }}>

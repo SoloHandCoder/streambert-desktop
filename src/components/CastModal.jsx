@@ -61,8 +61,19 @@ function PersonCard({ person }) {
   const subtitle =
     person.characterList?.join(", ") || person.jobList?.join(", ") || "";
 
+  const open = () => {
+    document.querySelector(".cast-overlay")?.click(); // close the dialog
+    window.__sbNav?.person?.({ id: person.id, name: person.name, profile_path: person.profile_path });
+  };
   return (
-    <div className="cast-person">
+    <div
+      className={`cast-person${window.__sbNav?.person ? " clickable" : ""}`}
+      role="button"
+      tabIndex={0}
+      title={`Open ${person.name}`}
+      onClick={open}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && open()}
+    >
       {person.profile_path ? (
         <img
           src={imgUrl(person.profile_path, "w185")}

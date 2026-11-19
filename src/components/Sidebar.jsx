@@ -13,6 +13,7 @@ import {
   QuitIcon,
   BackIcon,
   HelpIcon,
+  CompassIcon,
 } from "./Icons";
 
 export default function Sidebar({
@@ -123,6 +124,14 @@ export default function Sidebar({
         onClick={() => onNavigate("home")}
         icon={<HomeIcon />}
         label="Home"
+      />
+      <SideBtn
+        active={page === "discover"}
+        onClick={() => onNavigate("discover")}
+        icon={<CompassIcon />}
+        label="Discover"
+        short="Discover"
+        navId="discover"
       />
       <SideBtn
         active={page === "history"}

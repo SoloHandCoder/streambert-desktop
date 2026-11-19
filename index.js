@@ -673,7 +673,7 @@ ipcMain.on("player-stopped", () => {
 // Called from the renderer whenever it wants a native OS notification.
 ipcMain.handle(
   "show-notification",
-  (_event, { title, body, silent = false }) => {
+  (_event, { title, body, silent = false, url = null }) => {
     try {
       if (!Notification.isSupported()) return;
       const n = new Notification({
@@ -681,6 +681,18 @@ ipcMain.handle(
         body: String(body),
         silent,
       });
+      // clicking it opens the title (streambert:// links only)
+      if (typeof url === "string" && url.startsWith("streambert://")) {
+        n.on("click", () => {
+          const w = getMainWindow();
+          if (w && !w.isDestroyed()) {
+            if (w.isMinimized()) w.restore();
+            w.show();
+            w.focus();
+          }
+          linksIpc.handleArgv([url]);
+        });
+      }
       n.show();
     } catch {}
   },

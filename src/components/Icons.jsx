@@ -374,3 +374,10 @@ export const CastIcon = ({ size = 20 }) => (
     <path d="M16 15.503A5.041 5.041 0 1 0 16 5.42a5.041 5.041 0 0 0 0 10.083zm0 2.215c-6.703 0-11 3.699-11 5.5v3.363h22v-3.363c0-2.178-4.068-5.5-11-5.5z" />
   </svg>
 );
+
+export const CompassIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9.5" />
+    <path d="m15.9 8.1-2.1 5.7-5.7 2.1 2.1-5.7z" />
+  </svg>
+);

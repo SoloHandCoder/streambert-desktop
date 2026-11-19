@@ -123,8 +123,8 @@ contextBridge.exposeInMainWorld("electron", {
   getBlockStats: () => ipcRenderer.invoke("get-block-stats"),
 
   // Desktop notifications (triggered from renderer, executed in main)
-  showNotification: ({ title, body, silent }) =>
-    ipcRenderer.invoke("show-notification", { title, body, silent }),
+  showNotification: ({ title, body, silent, url }) =>
+    ipcRenderer.invoke("show-notification", { title, body, silent, url }),
 
   // Quit app
   quitApp: () => ipcRenderer.invoke("quit-app"),

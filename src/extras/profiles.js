@@ -22,6 +22,8 @@ const PERSONAL_KEYS = [
   "myRatings",
   "customLists",
   "watchStats",
+  "followedPeople",
+  "peopleNews",
 ];
 const PERSONAL_PREFIXES = ["dlTime_", "dlDur_", "localPos_"];
 

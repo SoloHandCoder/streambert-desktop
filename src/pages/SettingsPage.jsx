@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ReminderSettings from "../extras/ReminderSettings";
 import CloudSyncSection from "../components/CloudSyncSection";
 import ProfilesSection from "../extras/ProfilesSection";
 import SmartDownloadSettings from "../extras/SmartDownloadSettings";
@@ -4386,6 +4387,7 @@ export default function SettingsPage({
             subtitle="Desktop alerts for downloads and new episode releases"
           />
           <NotificationsSection />
+          <ReminderSettings />
         </div>
 
         {/* ══════════════════════════════════════════════════════════════════ */}

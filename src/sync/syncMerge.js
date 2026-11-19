@@ -13,7 +13,7 @@
 //    whichever side changed wins; if both changed, this device wins (it is the
 //    most recent change at the moment it syncs).
 
-export const MAP_KEYS = new Set(["saved", "progress", "watched", "episodeReleaseCache", "sourceFailoverCache", "myRatings"]);
+export const MAP_KEYS = new Set(["saved", "progress", "watched", "episodeReleaseCache", "sourceFailoverCache", "myRatings", "followedPeople"]);
 export const HISTORY_LIMIT = 100;
 
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);

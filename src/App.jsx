@@ -1,3 +1,5 @@
+import DiscoverPage from "./extras/DiscoverPage";
+import PersonPage from "./extras/PersonPage";
 import {
   useState,
   useEffect,
@@ -812,6 +814,7 @@ export default function App() {
         setPage(pg);
       },
       openSearch: () => setShowSearch(true),
+      person: (p) => navigate("person", p),
       markWatched: (key) => markWatchedRef.current?.(key),
       continueWatching: () => {
         let h = null;
@@ -825,7 +828,7 @@ export default function App() {
     return () => {
       delete window.__sbNav;
     };
-  }, [handleSelectResult]);
+  }, [handleSelectResult, navigate]);
 
   const saveApiKey = useCallback((key) => {
     secureStorage.set("apikey", key);
@@ -1168,6 +1171,27 @@ export default function App() {
                 downloads={downloads}
                 onGoToDownloads={handleGoToDownloads}
                 onEpisodeChange={setWatchingEpisode}
+              />
+            )}
+            {page === "discover" && (
+              <DiscoverPage
+                apiKey={apiKey}
+                onSelect={handleSelectResult}
+                watched={watched}
+                onMarkWatched={markWatched}
+                onMarkUnwatched={markUnwatched}
+              />
+            )}
+            {page === "person" && selected && (
+              <PersonPage
+                key={selected.id}
+                person={selected}
+                apiKey={apiKey}
+                onSelect={handleSelectResult}
+                onBack={navigateBack}
+                watched={watched}
+                onMarkWatched={markWatched}
+                onMarkUnwatched={markUnwatched}
               />
             )}
             {page === "history" && (

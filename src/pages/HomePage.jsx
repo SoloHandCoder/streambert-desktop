@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { PeopleNewsRow } from "../extras/PersonPage";
 import MediaCard from "../components/MediaCard";
 import TrendingCarousel from "../components/TrendingCarousel";
 import { PlayIcon, StarIcon } from "../components/Icons";
@@ -443,6 +444,10 @@ export default function HomePage({
           return (
             <UpcomingRow key="upcoming" apiKey={apiKey} saved={saved} history={history} onSelect={onSelect} />
           );
+        }
+
+        if (id === "people") {
+          return <PeopleNewsRow key="people" onSelect={onSelect} />;
         }
 
         if (id === "because") {

@@ -185,3 +185,56 @@ html[data-mobile] .sbpt-pops {
   bottom: calc(var(--m-nav-h, 64px) + var(--m-safe-b, 0px) + 66px);
 }
 html[data-mobile][data-player-fullscreen] .sbpt-pops { bottom: 66px; }
+
+/* tabs, host bar, ready check, queue */
+.sbpt-code-row .btn { flex-shrink: 0; }
+.sbpt-hostbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 2px 0; }
+.sbpt-note { font-size: 12px; }
+.sbpt-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; user-select: none; }
+.sbpt-switch input { position: absolute; opacity: 0; pointer-events: none; }
+.sbpt-switch-ui { position: relative; width: 34px; height: 20px; border-radius: 10px; background: var(--surface2); border: 1px solid var(--border); transition: background 0.2s; flex-shrink: 0; }
+.sbpt-switch-ui::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--text3); transition: transform 0.2s var(--sb-ease-out, ease), background 0.2s; }
+.sbpt-switch input:checked + .sbpt-switch-ui { background: var(--red); border-color: var(--red); }
+.sbpt-switch input:checked + .sbpt-switch-ui::after { transform: translateX(14px); background: #fff; }
+.sbpt-switch input:focus-visible + .sbpt-switch-ui { outline: 2px solid var(--red); outline-offset: 2px; }
+.sbpt-rd { margin-left: 6px; font-weight: 800; color: var(--text3); }
+.sbpt-rd.on { color: #4cd07d; }
+.sbpt-ready { padding: 10px 12px; border-radius: 12px; border: 1px solid #f2c94c; background: rgba(242, 201, 76, 0.08); display: flex; flex-direction: column; gap: 6px; animation: sbptPop 0.3s var(--sb-ease-spring, ease) backwards; }
+.sbpt-ready-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+.sbpt-ready-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.sbpt-ready-dot { width: 8px; height: 8px; border-radius: 50%; background: #4cd07d; animation: sbptBlink 1s ease-in-out infinite alternate; }
+@keyframes sbptBlink { to { opacity: 0.3; } }
+.sbpt-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-top: 2px; }
+.sbpt-tabs button { flex: 1; background: none; border: none; color: var(--text3); font: 700 13px var(--font-body); padding: 8px 4px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.sbpt-tabs button.on { color: var(--text); border-bottom-color: var(--red); }
+.sbpt-queue { flex: 1; min-height: 120px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 6px 0; }
+.sbpt-empty { font-size: 13px; line-height: 1.5; text-align: center; padding: 14px 8px; }
+.sbpt-qitem { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 10px; background: var(--surface2); }
+.sbpt-qitem img, .sbpt-qph { width: 34px; height: 51px; border-radius: 5px; object-fit: cover; background: var(--border); flex-shrink: 0; }
+.sbpt-qtext { flex: 1; min-width: 0; }
+.sbpt-qtitle { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbpt-qby { font-size: 11px; }
+.sbpt-qbtns { display: flex; gap: 2px; align-items: center; flex-shrink: 0; }
+.sbpt-qbtns .icon-btn { width: 28px; height: 28px; }
+.sbpt-pop-ready { cursor: default; border-color: #f2c94c; gap: 6px; }
+.sbpt-pop-ready .btn { align-self: stretch; justify-content: center; }
+.sbpt-count {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  font: 900 96px var(--font-body);
+  color: #fff;
+  text-shadow: 0 6px 30px rgba(0, 0, 0, 0.8);
+  animation: sbptCount 0.9s ease-out forwards;
+}
+@keyframes sbptCount {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+}
+.sbpt-code-row { flex-wrap: wrap; }
+.sbpt-code { white-space: nowrap; }
+.sbpt-code-row > div:first-child { flex: 1 1 140px; }
+html[data-mobile] .sbpt-code-row > div:first-child { flex-basis: 100%; }
+html[data-mobile] .sbpt-code-row .btn { flex: 1; justify-content: center; }

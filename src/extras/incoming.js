@@ -90,6 +90,10 @@ async function handle(text) {
     }
     return;
   }
+  if (/^streambert:\/\/party\//i.test(String(text))) {
+    window.dispatchEvent(new CustomEvent("streambert:party-join", { detail: { link: String(text) } }));
+    return;
+  }
   const sc = String(text).match(/^streambert:\/\/(?:open\/)?([a-z-]+)/i);
   if (sc) {
     const what = sc[1].toLowerCase();

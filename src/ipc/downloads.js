@@ -111,7 +111,7 @@ function killAllDownloads() {
     if (idx !== -1) {
       downloads[idx].status = "paused";
       downloads[idx].speed = "";
-      downloads[idx].lastMessage = "Paused when Streambert was closed";
+      downloads[idx].lastMessage = "Paused when Vidra was closed";
     }
     activeProcs.delete(id);
   }
@@ -367,7 +367,7 @@ function register(getMainWindow) {
         try {
           fs.writeFileSync(
             logPath,
-            `Streambert Download Log\nName: ${name}\nURL: ${m3u8Url}\nStarted: ${new Date().toISOString()}\n${"─".repeat(60)}\n`,
+            `Vidra Download Log\nName: ${name}\nURL: ${m3u8Url}\nStarted: ${new Date().toISOString()}\n${"─".repeat(60)}\n`,
             "utf8",
           );
         } catch {}

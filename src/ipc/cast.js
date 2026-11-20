@@ -270,7 +270,7 @@ async function cast({ device, url, filePath, title, poster, subtitle, startTime 
         metadata: {
           type: 0,
           metadataType: 0,
-          title: title || "Streambert",
+          title: title || "Vidra",
           subtitle: subtitle || "",
           images: poster ? [{ url: poster }] : [],
         },

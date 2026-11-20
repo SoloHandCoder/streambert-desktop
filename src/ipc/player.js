@@ -251,7 +251,7 @@ function register(getMainWindow, { writeSecretMigration }) {
     };
     // Launch and wait for a short time.
     // The player's output goes to a log FILE (not a pipe) so it is fully
-    // independent of this app: quitting Streambert will not close the player
+    // independent of this app: quitting Vidra will not close the player
     const tryLaunch = (bin, args) => {
       const resolved = resolveBin(bin);
       if (!resolved) return Promise.resolve(null);

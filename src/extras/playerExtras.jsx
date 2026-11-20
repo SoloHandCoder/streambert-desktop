@@ -108,7 +108,7 @@ function tickJs(st, offset, meta) {
       const cur = navigator.mediaSession.metadata;
       if (!cur || cur.title !== meta.title) {
         try {
-          navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title, artist: meta.subtitle || "Streambert", artwork: meta.artwork ? [{ src: meta.artwork, sizes: "342x513", type: "image/jpeg" }] : [] });
+          navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title, artist: meta.subtitle || "Vidra", artwork: meta.artwork ? [{ src: meta.artwork, sizes: "342x513", type: "image/jpeg" }] : [] });
         } catch (e) {}
       }
     }
@@ -148,7 +148,7 @@ export function usePlayerExtras({ webviewRef, active, info, offsetKey }) {
       const meta = inf?.title
         ? {
             title: inf.title,
-            subtitle: inf.episodeLabel || "Streambert",
+            subtitle: inf.episodeLabel || "Vidra",
             artwork: inf.poster_path ? `https://image.tmdb.org/t/p/w342${inf.poster_path}` : null,
           }
         : null;

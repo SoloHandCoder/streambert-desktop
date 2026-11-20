@@ -333,9 +333,9 @@ function LockSettings() {
           }}
         />
         <div>
-          <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Lock Streambert with a PIN</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Lock Vidra with a PIN</div>
           <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2, lineHeight: 1.5 }}>
-            Asked when Streambert opens and when you come back to it. Keeps others on this computer out of your profiles.
+            Asked when Vidra opens and when you come back to it. Keeps others on this computer out of your profiles.
           </div>
         </div>
       </div>

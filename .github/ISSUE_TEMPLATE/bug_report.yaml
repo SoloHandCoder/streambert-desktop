@@ -13,7 +13,7 @@ body:
       label: Guidelines
       description: Please ensure you've completed all of the following.
       options:
-        - label: I have encountered this bug in the [latest release of Streambert](https://github.com/truelockmc/streambert/releases).
+        - label: I have encountered this bug in the [latest release of Vidra](https://github.com/truelockmc/streambert/releases).
           required: true
         - label: I have [searched the issue tracker for open and closed issues](https://github.com/truelockmc/streambert/issues?q=is%3Aissue+sort%3Arelevance-desc) that are similar to the bug report I want to file, without success.
           required: true
@@ -59,7 +59,7 @@ body:
       required: true
   - type: input
     attributes:
-      label: Streambert Version
+      label: Vidra Version
       description: |
         Enter the version of streambert you are using (you can check that in your settings).
       placeholder: v2.2.1

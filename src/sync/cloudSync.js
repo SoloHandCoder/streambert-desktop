@@ -1,5 +1,5 @@
 // Cloud sync through a private (secret) GitHub Gist. Same format as the
-// Streambert Android app, so computers and phones share every profile's
+// Vidra Android app, so computers and phones share every profile's
 // history, saved titles, progress, watched episodes, ratings, lists and stats.
 //
 // Gist "Streambert sync":

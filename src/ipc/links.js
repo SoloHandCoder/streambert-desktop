@@ -4,7 +4,7 @@ const { app, ipcMain } = require("electron");
 let pending = null;
 let getWin = () => null;
 
-const linkFrom = (argv) => (argv || []).find((a) => /^streambert:\/\//i.test(String(a))) || null;
+const linkFrom = (argv) => (argv || []).find((a) => /^(?:streambert|vidra):\/\//i.test(String(a))) || null;
 
 function handleArgv(argv) {
   const link = linkFrom(argv);
@@ -20,6 +20,7 @@ function register(getMainWindow) {
   if (app.isPackaged) {
     try {
       app.setAsDefaultProtocolClient("streambert");
+      app.setAsDefaultProtocolClient("vidra");
     } catch {}
   }
   pending = linkFrom(process.argv);

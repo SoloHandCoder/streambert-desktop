@@ -1,6 +1,6 @@
 """Generate the desktop app icons (same look as the Android app) from public/logo.svg.
 
-Style: Streambert red with a subtle top→bottom gradient, white logo at ~60 %
+Style: Vidra red with a subtle top→bottom gradient, white logo at ~60 %
 of the visible icon, soft drop shadow.
 
     python scripts/make-icons.py

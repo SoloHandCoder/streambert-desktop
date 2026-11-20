@@ -1,5 +1,5 @@
 // Settings → Cloud Sync: sync history, saved titles, progress and watched
-// episodes with the Streambert Android app through a private GitHub Gist.
+// episodes with the Vidra Android app through a private GitHub Gist.
 import { useEffect, useState } from "react";
 import { connect, disconnect, getStatus, onStatus, setAuto, syncNow } from "../sync/cloudSync";
 
@@ -80,7 +80,7 @@ export default function CloudSyncSection() {
     <div style={{ marginBottom: 40 }}>
       <div className="settings-section-title">GitHub Gist sync</div>
       <div style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16, lineHeight: 1.6, maxWidth: 680 }}>
-        Keeps every profile's history, saved titles, progress, watched episodes, ratings, lists and watch stats in sync with the Streambert Android app and
+        Keeps every profile's history, saved titles, progress, watched episodes, ratings, lists and watch stats in sync with the Vidra Android app and
         your other computers. Everything is stored in a private (secret) Gist on your own GitHub account; your token
         is stored encrypted on this computer.
       </div>
@@ -169,7 +169,7 @@ export default function CloudSyncSection() {
             <div>
               <div style={{ fontSize: 14, fontWeight: 500, color: "var(--text)" }}>Sync automatically</div>
               <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
-                On start, every 5 minutes, and when you minimize or close Streambert.
+                On start, every 5 minutes, and when you minimize or close Vidra.
               </div>
             </div>
           </div>

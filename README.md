@@ -1,13 +1,13 @@
-# Streambert Desktop
+# Vidra Desktop
 
-[![Release](https://img.shields.io/github/v/release/SoloHandCoder/streambert-desktop?style=for-the-badge)](https://github.com/SoloHandCoder/streambert-desktop/releases/latest)
-[![Android app](https://img.shields.io/badge/Android-streambert--android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SoloHandCoder/streambert-android)
+[![Release](https://img.shields.io/github/v/release/SoloHandCoder/vidra-desktop?style=for-the-badge)](https://github.com/SoloHandCoder/vidra-desktop/releases/latest)
+[![Android app](https://img.shields.io/badge/Android-vidra--android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/SoloHandCoder/vidra-android)
 
-Stream and download any movie, TV series or anime, with no ads or tracking[*](#privacy-disclaimer). This is the desktop version that goes with the [Streambert Android app](https://github.com/SoloHandCoder/streambert-android). Both apps share your library through cloud sync.
+Stream and download any movie, TV series or anime, with no ads or tracking[*](#privacy-disclaimer). This is the desktop version that goes with the [Vidra Android app](https://github.com/SoloHandCoder/vidra-android). Both apps share your library through cloud sync.
 
 ![Logo](public/logo.svg)
 
-[Download](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) · [Installation](#installation) · [Building from source](#building-from-source)
+[Download](https://github.com/SoloHandCoder/vidra-desktop/releases/latest) · [Installation](#installation) · [Building from source](#building-from-source)
 
 ## What's in this version
 - ☁️ **Cloud sync:** your watchlist, history, progress, watched episodes, ratings, lists, watch stats and profiles sync with your phone and other computers through a private GitHub Gist (Settings → Cloud Sync).
@@ -63,7 +63,7 @@ Media Files for Animes are scraped from AllManga.to (i stole this mechanic from 
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/) (>=22.12.0) installed (only if you aren't using [prebuilt Binaries](https://github.com/SoloHandCoder/streambert-desktop/releases/latest))
+- [Node.js](https://nodejs.org/) (>=22.12.0) installed (only if you aren't using [prebuilt Binaries](https://github.com/SoloHandCoder/vidra-desktop/releases/latest))
 - A free TMDB API Read Access Token ([Guide on how to get one](tmdb-tutorial.md))
 - For downloading, [this Program](https://github.com/truelockmc/vid-dl-cli-only/releases/latest) somewhere on your PC and [ffmpeg](https://ffmpeg.org/download.html) installed
 
@@ -74,7 +74,7 @@ It's saved locally, you only need to do this once.
 
 ### Linux, Manual (.deb / .AppImage / .pacman)
 
-Download the latest `.deb` `.pacman` or `.AppImage` from the [Releases](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) page.
+Download the latest `.deb` `.pacman` or `.AppImage` from the [Releases](https://github.com/SoloHandCoder/vidra-desktop/releases/latest) page.
 ```bash
 # .deb
 sudo dpkg -i streambert_*.deb
@@ -83,15 +83,15 @@ sudo dpkg -i streambert_*.deb
 sudo pacman -U streambert-*.pacman
 
 # .AppImage (you can also do it with Gearlever)
-chmod +x Streambert-x64.AppImage && ./Streambert-x64.AppImage
+chmod +x Vidra-x64.AppImage && ./Vidra-x64.AppImage
 ```
 
 ### Windows
 
-Download the latest `Streambert Setup *.exe` from the [Releases](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) page and run it.
+Download the latest `Vidra Setup *.exe` from the [Releases](https://github.com/SoloHandCoder/vidra-desktop/releases/latest) page and run it.
 
 ### macOS
-Download the latest `Streambert-*-universal.dmg` from the [Releases](https://github.com/SoloHandCoder/streambert-desktop/releases/latest) page, open it and drag Streambert to your Applications folder.
+Download the latest `Vidra-*-universal.dmg` from the [Releases](https://github.com/SoloHandCoder/vidra-desktop/releases/latest) page, open it and drag Vidra to your Applications folder.
 
 ---
 
@@ -140,7 +140,7 @@ npm run dist
 > - **http-parser dependency error:** `yay -S http-parser` (from AUR)
 
 ## Credits
-Streambert was created by [truelockmc](https://github.com/truelockmc/streambert). This version is built on their work, and all credit for the original app goes to them.
+Vidra is based on Streambert, which was created by [truelockmc](https://github.com/truelockmc/streambert). Vidra was called "Streambert Desktop" until version 2.18. This version is built on their work, and all credit for the original app goes to them.
 
 ## License
 This project is open-source software licensed under the GNU General Public License v3.0 [(GPL-3.0)](LICENSE).
@@ -151,16 +151,16 @@ Forks may be created but they MUST stay open-sourced.
 Ideas and bug reports for this version are welcome in this repo's issues. Changes to the core app are best sent to the [original project](https://github.com/truelockmc/streambert).
 
 ## Privacy Disclaimer
-Streambert itself does not collect ANY data. There is no centralized service which the app relies on.
+Vidra itself does not collect ANY data. There is no centralized service which the app relies on.
 However, the streaming sources and github (for downloading updates in-app) may still collect your data.
 
-Streambert has built-in tracker/- and adblocking, but obviously that is not perfect.
+Vidra has built-in tracker/- and adblocking, but obviously that is not perfect.
 
 ## Legal Disclaimer
 
 **IMPORTANT: This application is for educational and personal use only.**
 
-- Streambert does not host, store, or distribute any copyrighted content
+- Vidra does not host, store, or distribute any copyrighted content
 - All content is sourced from third-party providers and websites
 - Users are solely responsible for ensuring they have legal rights to access any content
 - The developer does not endorse or encourage copyright infringement

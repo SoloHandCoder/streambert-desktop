@@ -1,4 +1,4 @@
-// -- Streambert main process entry point ---------------------------------------
+// -- Vidra main process entry point ---------------------------------------
 // Responsible for: window creation, session setup, ad-blocking, scheduled
 // backup trigger, and app lifecycle. All heavy IPC logic lives in src/ipc/.
 
@@ -15,6 +15,11 @@ const localMedia = require("./src/ipc/localMedia");
 const linksIpc = require("./src/ipc/links");
 const castIpc = require("./src/ipc/cast");
 const extrasIpc = require("./src/ipc/extrasIpc");
+// The app was called Streambert until 2.18: keep using the same data folder so
+// profiles, history and settings carry over (a test copy's --user-data-dir wins).
+if (!app.commandLine.hasSwitch("user-data-dir")) {
+  app.setPath("userData", path.join(app.getPath("appData"), "streambert"));
+}
 localMedia.registerScheme();
 
 // -- RAM / performance flags ---------------------------------------------------
@@ -294,7 +299,7 @@ let sessionsConfigured = false;
 function buildCleanUserAgent() {
   return app.userAgentFallback
     .replace(/\s?Electron\/\S+/i, "")
-    .replace(/\s?streambert\/\S+/i, "")
+    .replace(/\s?(?:streambert|vidra)\/\S+/i, "")
     .trim();
 }
 

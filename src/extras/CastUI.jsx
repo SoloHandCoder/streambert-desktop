@@ -71,7 +71,7 @@ function Picker({ what, onClose }) {
         {devices?.length === 0 && (
           <div className="sbx-muted" style={{ lineHeight: 1.6 }}>
             No Chromecast or Google TV found. Make sure it's on and on the same Wi-Fi as this computer. If Windows asks,
-            allow Streambert on private networks.
+            allow Vidra on private networks.
           </div>
         )}
         <div className="sbx-list-rows">

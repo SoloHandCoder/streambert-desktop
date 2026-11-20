@@ -1,4 +1,4 @@
-// App lock for the desktop: a PIN asked when Streambert starts and after it
+// App lock for the desktop: a PIN asked when Vidra starts and after it
 // was in the background for a while. (The Android app uses fingerprint / phone
 // PIN instead.) Only a salted SHA-256 hash of the PIN is stored.
 import "./appLock.css";

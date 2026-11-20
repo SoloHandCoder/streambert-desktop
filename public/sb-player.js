@@ -1,4 +1,4 @@
-/* Streambert in-app player (public/sb-player.html).
+/* Vidra in-app player (public/sb-player.html).
  * URL params: src, title, t, key, sub, subs (JSON [{url,label,lang}]), close=1, cast=1, type=hls|mp4
  * Talks to the host page with window.parent.postMessage({ __sb: "player", cmd, ... }, "*").
  */
@@ -90,7 +90,7 @@
   ui.cast.hidden = !CAN_CAST;
   if ((!FRAMED || PC) && !document.pictureInPictureEnabled) ui.pip.hidden = true;
   if (PC && navigator.mediaSession && window.MediaMetadata) {
-    try { navigator.mediaSession.metadata = new MediaMetadata({ title: TITLE || "Streambert", artist: "Streambert" }); } catch (e) {}
+    try { navigator.mediaSession.metadata = new MediaMetadata({ title: TITLE || "Vidra", artist: "Vidra" }); } catch (e) {}
   }
   if (PC) {
     root.classList.add("pc");

@@ -1,7 +1,7 @@
 {
   "name": "streambert",
   "version": "2.18.0",
-  "description": "Streambert Desktop (with cloud sync)",
+  "description": "Vidra Desktop (with cloud sync)",
   "author": {
     "name": "truelockmc",
     "email": "anonyson@proton.me"
@@ -41,7 +41,7 @@
   },
   "build": {
     "appId": "com.truelockmc.streambert",
-    "productName": "Streambert",
+    "productName": "Vidra",
     "asar": true,
     "compression": "normal",
     "directories": {
@@ -96,7 +96,7 @@
       "createStartMenuShortcut": true,
       "selectPerMachineByDefault": false,
       "license": "LICENSE",
-      "uninstallDisplayName": "Uninstall Streambert",
+      "uninstallDisplayName": "Uninstall Vidra",
       "installerSidebar": "public/installer-sidebar.bmp"
     },
     "win": {
@@ -162,11 +162,11 @@
       "icon": "public/sized",
       "desktop": {
         "entry": {
-          "Name": "Streambert",
-          "Comment": "Streambert Desktop App",
+          "Name": "Vidra",
+          "Comment": "Vidra Desktop App",
           "Categories": "AudioVideo;Video;Player;Multimedia;Internet;",
           "Icon": "streambert",
-          "StartupWMClass": "Streambert"
+          "StartupWMClass": "Vidra"
         }
       }
     },

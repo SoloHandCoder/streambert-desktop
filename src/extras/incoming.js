@@ -1,4 +1,4 @@
-// Links opened with Streambert (desktop):
+// Links opened with Vidra (desktop):
 //   streambert://open/movie/550, streambert://open/tv/1399?s=1&e=2   (taskbar "Continue watching")
 //   streambert://open/search | downloads | library | settings | continue
 //   TMDB / IMDb links pasted into search
@@ -68,6 +68,7 @@ export async function openLink(link) {
 }
 
 async function handle(text) {
+  if (text) text = String(text).replace(/^vidra:\/\//i, "streambert://"); // new link name, same links
   if (!text || !(await waitForApp())) return;
   const nav = window.__sbNav;
   const title = String(text).match(/^streambert:\/\/(?:open\/)?(movie|tv)\/(\d+)(?:\/?\?(.*))?/i);

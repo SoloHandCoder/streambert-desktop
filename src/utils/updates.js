@@ -4,7 +4,7 @@
 // Supports multiple release sources (GitHub + Codeberg).
 
 // Updates come from this desktop copy's own GitHub releases
-export const GITHUB_REPO = "SoloHandCoder/streambert-desktop";
+export const GITHUB_REPO = "SoloHandCoder/vidra-desktop";
 
 // ── Source registry ───────────────────────────────────────────────────────────
 // Each entry just describes *where* to fetch from and how to build the

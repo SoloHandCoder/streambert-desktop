@@ -20,6 +20,7 @@ import {
   applyAccentColor,
   applyTheme,
   ACCENT_PRESETS,
+  accentHexOf,
 } from "./utils/appearance";
 import { collectBackupData } from "./utils/backup";
 import { tmdbFetch, setApiErrorHandlers, imgUrl } from "./utils/api";
@@ -104,7 +105,7 @@ export default function App() {
     const accentId = storage.get(STORAGE_KEYS.ACCENT_COLOR) || "red";
     const inPlayer = storage.get(STORAGE_KEYS.ACCENT_IN_PLAYER) !== false; // default true
     const accentHex = inPlayer
-      ? (ACCENT_PRESETS.find((p) => p.id === accentId)?.color ?? null)
+      ? accentHexOf(accentId)
       : null;
     const subtitleLang = storage.get(STORAGE_KEYS.SUBTITLE_LANG) || null;
     return { accentColor: accentHex, subtitleLang };

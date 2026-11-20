@@ -132,7 +132,18 @@ export function usePlayerExtras({ webviewRef, active, info, offsetKey }) {
     if (!active) return;
     let stopped = false;
     let last = Date.now();
+    let ticking = false;
     const tick = async () => {
+      // never overlap: a slow player page must not stack up checks
+      if (ticking) return;
+      ticking = true;
+      try {
+        await tickOnce();
+      } finally {
+        ticking = false;
+      }
+    };
+    const tickOnce = async () => {
       const wv = webviewRef.current;
       const now = Date.now();
       const elapsed = Math.min(10, Math.round((now - last) / 1000));
